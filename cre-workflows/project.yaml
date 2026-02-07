@@ -1,0 +1,5 @@
+staging-settings:
+  project_settings:
+    chains:
+      - name: "ethereum-testnet-sepolia-base-1"
+        rpc_url: "https://sepolia.base.org"
