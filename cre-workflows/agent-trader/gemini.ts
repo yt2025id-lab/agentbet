@@ -1,4 +1,4 @@
-import { cre, type Runtime } from "@chainlink/cre-sdk";
+import { HTTPClient, type Runtime, ok, text } from "@chainlink/cre-sdk";
 
 interface TradingStrategy {
   choice: "YES" | "NO";
@@ -7,13 +7,9 @@ interface TradingStrategy {
   suggestedBetSize: string;
 }
 
-/**
- * Ask Gemini for a trading strategy on a specific prediction market.
- * Provides market context, price data, and pool information.
- */
 export function askGeminiForStrategy(
   runtime: Runtime<any>,
-  httpClient: ReturnType<typeof cre.capabilities.HTTPClient>,
+  httpClient: HTTPClient,
   geminiModel: string,
   context: {
     question: string;
@@ -25,7 +21,7 @@ export function askGeminiForStrategy(
     linkPrice?: string;
   }
 ): TradingStrategy | null {
-  const apiKey = runtime.secrets.get("GEMINI_API_KEY");
+  const apiKey = runtime.getSecret({ id: "GEMINI_API_KEY" }).result().value;
 
   const systemPrompt = `You are an expert AI trading agent for prediction markets.
 Analyze the market and provide your trading recommendation.
@@ -65,7 +61,7 @@ What is your trading recommendation?`;
     tools: [{ googleSearch: {} }],
   };
 
-  const body = btoa(JSON.stringify(requestBody));
+  const body = Buffer.from(JSON.stringify(requestBody)).toString("base64");
 
   const response = httpClient
     .sendRequest(runtime, {
@@ -73,15 +69,21 @@ What is your trading recommendation?`;
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: body,
-      maxResponseBytes: 10000,
-      cacheMaxAge: 30,
     })
     .result();
 
+  if (!ok(response)) {
+    runtime.log(
+      `[gemini] HTTP request failed with status: ${response.statusCode}`
+    );
+    return null;
+  }
+
   try {
-    const parsed = JSON.parse(atob(response.body));
-    const text = parsed.candidates[0].content.parts[0].text;
-    const strategy: TradingStrategy = JSON.parse(text);
+    const responseText = text(response);
+    const parsed = JSON.parse(responseText);
+    const generatedText = parsed.candidates[0].content.parts[0].text;
+    const strategy: TradingStrategy = JSON.parse(generatedText);
 
     if (
       (strategy.choice === "YES" || strategy.choice === "NO") &&
@@ -89,10 +91,10 @@ What is your trading recommendation?`;
     ) {
       return strategy;
     }
-    console.log("[gemini] Invalid strategy format:", text);
+    runtime.log("[gemini] Invalid strategy format: " + generatedText);
     return null;
-  } catch (e) {
-    console.log("[gemini] Failed to parse strategy:", e);
+  } catch (e: any) {
+    runtime.log("[gemini] Failed to parse strategy: " + (e.message || e));
     return null;
   }
 }

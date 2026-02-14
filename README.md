@@ -97,12 +97,15 @@ Built for the [Chainlink Convergence Hackathon](https://chain.link/hackathon) (F
 > Required for hackathon submission — direct links to all Chainlink-related files.
 
 ### CRE Workflows
-- [`cre-workflows/market-creator/workflow.ts`](cre-workflows/market-creator/workflow.ts) — Cron + HTTP trigger, Gemini AI market creation
-- [`cre-workflows/market-creator/trigger.ts`](cre-workflows/market-creator/trigger.ts) — Trigger config (cron + HTTP)
-- [`cre-workflows/agent-trader/workflow.ts`](cre-workflows/agent-trader/workflow.ts) — HTTP trigger, Data Feeds + Gemini AI trading
-- [`cre-workflows/agent-trader/trigger.ts`](cre-workflows/agent-trader/trigger.ts) — Trigger config (HTTP)
-- [`cre-workflows/market-settler/workflow.ts`](cre-workflows/market-settler/workflow.ts) — EVM Log trigger, Gemini AI settlement
-- [`cre-workflows/market-settler/trigger.ts`](cre-workflows/market-settler/trigger.ts) — Trigger config (EVM log)
+- [`cre-workflows/market-creator/main.ts`](cre-workflows/market-creator/main.ts) — Cron trigger, Gemini AI market creation
+- [`cre-workflows/market-creator/cronCallback.ts`](cre-workflows/market-creator/cronCallback.ts) — Market creation logic + consensus report
+- [`cre-workflows/market-creator/gemini.ts`](cre-workflows/market-creator/gemini.ts) — Gemini AI integration
+- [`cre-workflows/agent-trader/main.ts`](cre-workflows/agent-trader/main.ts) — Cron trigger, Data Feeds + Gemini AI trading
+- [`cre-workflows/agent-trader/httpCallback.ts`](cre-workflows/agent-trader/httpCallback.ts) — Trading strategy + Data Feeds reads
+- [`cre-workflows/agent-trader/gemini.ts`](cre-workflows/agent-trader/gemini.ts) — Gemini AI strategy
+- [`cre-workflows/market-settler/main.ts`](cre-workflows/market-settler/main.ts) — EVM Log trigger, settlement
+- [`cre-workflows/market-settler/logCallback.ts`](cre-workflows/market-settler/logCallback.ts) — Settlement logic + consensus report
+- [`cre-workflows/market-settler/gemini.ts`](cre-workflows/market-settler/gemini.ts) — Gemini AI fact-checking
 
 ### x402 Payment Protocol
 - [`x402-server/src/server.ts`](x402-server/src/server.ts) — Express server with x402 payment middleware config
@@ -202,24 +205,24 @@ After deployment, update contract addresses in `.env`.
 ```bash
 cd cre-workflows
 
+# Install CRE CLI v1.0.11
+# Download from https://github.com/smartcontractkit/cre-cli/releases
+
 # Install dependencies per workflow
-cd market-settler && bun install && cd ..
 cd market-creator && bun install && cd ..
+cd market-settler && bun install && cd ..
 cd agent-trader && bun install && cd ..
 
-# Set secrets
-export CRE_ETH_PRIVATE_KEY=your_private_key
-export GEMINI_API_KEY_VAR=your_gemini_key
+# Setup Javy plugin (required for WASM compilation)
+cd market-creator && bun node_modules/@chainlink/cre-sdk-javy-plugin/bin/setup.ts && cd ..
 
-# Simulate workflows
-cre workflow simulate market-settler --broadcast
-cre workflow simulate market-creator --broadcast
-cre workflow simulate agent-trader --broadcast
+# Set environment variables in .env
+cp .env.example .env
+# Fill in CRE_ETH_PRIVATE_KEY and GEMINI_API_KEY_VAR
 
-# Deploy to CRE network
-cre workflow deploy market-settler
-cre workflow deploy market-creator
-cre workflow deploy agent-trader
+# Simulate workflows (compiles TS → WASM via Javy, then runs in CRE simulator)
+cd market-creator && cre workflow simulate . --trigger-index 0 --non-interactive && cd ..
+cd agent-trader && cre workflow simulate . --trigger-index 0 --non-interactive && cd ..
 ```
 
 ### 4. x402 Server
@@ -308,15 +311,16 @@ Open http://localhost:3000
 
 ## CRE Workflows
 
-### market-settler (EVM Log Trigger)
-Listens for `SettlementRequested` events → Gemini AI verifies outcome with search grounding → encodes settlement report → writes on-chain via CRE Forwarder.
+All workflows use `@chainlink/cre-sdk` v1.0.9, compiled to WASM via Javy with the Chainlink SDK plugin.
 
-### market-creator (Cron + HTTP Trigger)
-- **Cron** (every 6h): Gemini generates trending prediction questions → auto-creates markets on-chain
-- **HTTP**: Validates user-submitted questions via AI → creates markets
+### market-creator (Cron Trigger) — Simulation ✅
+Cron (every 6h) → Gemini AI generates trending prediction questions → ABI-encodes market creation report (action 0x00) → signs via DON consensus (`runtime.report(prepareReportRequest(...))`) → writes on-chain via `EVMClient.writeReport()` to PredictionMarket.onReport().
 
-### agent-trader (HTTP Trigger)
-Receives trade request → reads market state → fetches Chainlink Data Feeds (ETH/USD, BTC/USD, LINK/USD) → Gemini analyzes strategy → places bet if confidence > 60%.
+### market-settler (EVM Log Trigger) — Compiled ✅
+Listens for `SettlementRequested` events on PredictionMarket → Gemini AI verifies real-world outcome with search grounding → encodes settlement report (action 0x01) → signs via consensus → writes settlement on-chain via CRE Forwarder.
+
+### agent-trader (Cron Trigger) — Simulation ✅
+Cron (every 4h) → reads on-chain market state via `EVMClient.callContract()` → fetches live prices from Chainlink Data Feeds (ETH/USD, BTC/USD, LINK/USD via `latestRoundData()`) → Gemini AI analyzes trading strategy → outputs trade recommendation with confidence score.
 
 ---
 
@@ -340,7 +344,11 @@ Receives trade request → reads market state → fetches Chainlink Data Feeds (
 | LINK | `0xE4aB69C077896252FAFBD49EFD26B5D171A32410` |
 | CCIP Router | `0xD3b06cEbF099CE7DA4AcCf578aaebFDBd6e88a93` |
 
-## Demo Flow
+## Live Demo
+
+**Frontend**: [agentbet.vercel.app](https://agentbet.vercel.app)
+
+### Demo Flow
 
 1. **Register** AI agent — mints ERC-721 NFT identity with on-chain metadata
 2. **CRE auto-creates** prediction market via Gemini + x402 payment

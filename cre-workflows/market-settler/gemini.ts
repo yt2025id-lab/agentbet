@@ -1,4 +1,4 @@
-import { cre, type Runtime } from "@chainlink/cre-sdk";
+import { HTTPClient, type Runtime, ok, text } from "@chainlink/cre-sdk";
 
 interface GeminiSettlementResult {
   outcome: "YES" | "NO";
@@ -6,17 +6,13 @@ interface GeminiSettlementResult {
   reasoning: string;
 }
 
-/**
- * Ask Google Gemini to determine if a prediction market question has resolved YES or NO.
- * Uses search grounding for real-world verification.
- */
 export function askGeminiForSettlement(
   runtime: Runtime<any>,
-  httpClient: ReturnType<typeof cre.capabilities.HTTPClient>,
+  httpClient: HTTPClient,
   geminiModel: string,
   question: string
 ): GeminiSettlementResult | null {
-  const apiKey = runtime.secrets.get("GEMINI_API_KEY");
+  const apiKey = runtime.getSecret({ id: "GEMINI_API_KEY" }).result().value;
 
   const systemPrompt = `You are an objective fact-checker for prediction markets.
 Given a YES/NO prediction market question, determine the factual outcome based on current real-world information.
@@ -48,7 +44,7 @@ Return ONLY valid JSON with this exact format:
     tools: [{ googleSearch: {} }],
   };
 
-  const body = btoa(JSON.stringify(requestBody));
+  const body = Buffer.from(JSON.stringify(requestBody)).toString("base64");
 
   const response = httpClient
     .sendRequest(runtime, {
@@ -56,17 +52,22 @@ Return ONLY valid JSON with this exact format:
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: body,
-      maxResponseBytes: 10000,
-      cacheMaxAge: 60,
     })
     .result();
 
-  try {
-    const parsed = JSON.parse(atob(response.body));
-    const text = parsed.candidates[0].content.parts[0].text;
-    const result: GeminiSettlementResult = JSON.parse(text);
+  if (!ok(response)) {
+    runtime.log(
+      `[gemini] HTTP request failed with status: ${response.statusCode}`
+    );
+    return null;
+  }
 
-    // Validate
+  try {
+    const responseText = text(response);
+    const parsed = JSON.parse(responseText);
+    const generatedText = parsed.candidates[0].content.parts[0].text;
+    const result: GeminiSettlementResult = JSON.parse(generatedText);
+
     if (
       (result.outcome === "YES" || result.outcome === "NO") &&
       typeof result.confidence === "number" &&
@@ -75,10 +76,10 @@ Return ONLY valid JSON with this exact format:
     ) {
       return result;
     }
-    console.log("[gemini] Invalid response format:", text);
+    runtime.log("[gemini] Invalid response format: " + generatedText);
     return null;
-  } catch (e) {
-    console.log("[gemini] Failed to parse response:", e);
+  } catch (e: any) {
+    runtime.log("[gemini] Failed to parse response: " + (e.message || e));
     return null;
   }
 }

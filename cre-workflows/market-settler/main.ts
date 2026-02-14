@@ -1,4 +1,11 @@
-import { cre, Runner, getNetwork } from "@chainlink/cre-sdk";
+import {
+  EVMClient,
+  handler,
+  Runner,
+  type Runtime,
+  getNetwork,
+  hexToBase64,
+} from "@chainlink/cre-sdk";
 import { keccak256, toHex } from "viem";
 import { onLogTrigger } from "./logCallback";
 
@@ -11,22 +18,20 @@ interface Config {
   }[];
 }
 
-/**
- * Market Settler CRE Workflow
- *
- * Listens for SettlementRequested events on the PredictionMarket contract.
- * When triggered, asks Gemini AI to determine the real-world outcome,
- * then writes the settlement report on-chain via CRE Forwarder.
- *
- * Chainlink Services Used:
- * - CRE (core orchestration)
- * - HTTPClient (Gemini API call)
- * - EVMClient (write settlement report)
- * - EVM Log Trigger (listen for events)
- */
 const initWorkflow = (config: Config) => {
-  const logTrigger = new cre.capabilities.EVMLogTrigger();
-  const network = getNetwork(config.evms[0].chainSelectorName);
+  const evmConfig = config.evms[0];
+
+  const network = getNetwork({
+    chainFamily: "evm",
+    chainSelectorName: evmConfig.chainSelectorName,
+    isTestnet: true,
+  });
+
+  if (!network) {
+    throw new Error(`Network not found: ${evmConfig.chainSelectorName}`);
+  }
+
+  const evmClient = new EVMClient(network.chainSelector.selector);
 
   // SettlementRequested(uint256 indexed marketId, string question)
   const eventSignature = keccak256(
@@ -34,22 +39,18 @@ const initWorkflow = (config: Config) => {
   );
 
   return [
-    cre.handler(
-      logTrigger.trigger({
-        network: network,
-        addresses: [config.evms[0].marketAddress],
-        eventSignatures: [eventSignature],
-        confidence: "finalized",
+    handler(
+      evmClient.logTrigger({
+        addresses: [hexToBase64(evmConfig.marketAddress)],
+        topics: [{ values: [hexToBase64(eventSignature)] }],
+        confidence: "CONFIDENCE_LEVEL_FINALIZED",
       }),
-      (runtime, trigger) => onLogTrigger(runtime, trigger, config)
+      onLogTrigger
     ),
   ];
 };
 
-async function main() {
-  const runner = new Runner<Config>();
+export async function main() {
+  const runner = await Runner.newRunner<Config>();
   await runner.run(initWorkflow);
 }
-
-export { initWorkflow, main };
-main();
