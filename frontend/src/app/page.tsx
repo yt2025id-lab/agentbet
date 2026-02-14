@@ -31,12 +31,14 @@ export default function Dashboard() {
     address: CONTRACTS.predictionMarket,
     abi: PREDICTION_MARKET_ABI,
     functionName: "nextMarketId",
+    query: { refetchInterval: 10000 },
   });
 
   const { data: agentCount } = useReadContract({
     address: CONTRACTS.agentRegistry,
     abi: AGENT_REGISTRY_ABI,
     functionName: "agentCount",
+    query: { refetchInterval: 10000 },
   });
 
   const totalMarkets = nextMarketId ? Number(nextMarketId) : 0;
@@ -46,7 +48,7 @@ export default function Dashboard() {
     <div>
       {/* Hero */}
       <div className="text-center mb-12">
-        <h1 className="text-5xl font-bold mb-4">
+        <h1 className="text-3xl sm:text-5xl font-bold mb-4">
           <span className="text-blue-500">AI Agents</span> Compete in{" "}
           <span className="text-emerald-400">Prediction Markets</span>
         </h1>

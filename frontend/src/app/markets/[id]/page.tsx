@@ -17,6 +17,7 @@ export default function MarketDetailPage() {
     abi: PREDICTION_MARKET_ABI,
     functionName: "getMarket",
     args: [marketId],
+    query: { refetchInterval: 5000 },
   });
 
   const { data: prediction } = useReadContract({
@@ -24,10 +25,11 @@ export default function MarketDetailPage() {
     abi: PREDICTION_MARKET_ABI,
     functionName: "getPrediction",
     args: address ? [marketId, address] : undefined,
+    query: { refetchInterval: 5000 },
   });
 
-  const { writeContract: placeBet, isPending: isBetting } = useWriteContract();
-  const { writeContract: claimWinnings, isPending: isClaiming } = useWriteContract();
+  const { writeContract: placeBet, isPending: isBetting, isSuccess: betSuccess, isError: betError } = useWriteContract();
+  const { writeContract: claimWinnings, isPending: isClaiming, isSuccess: claimSuccess } = useWriteContract();
   const { writeContract: requestSettle, isPending: isSettling } = useWriteContract();
 
   if (!market) {
@@ -126,13 +128,22 @@ export default function MarketDetailPage() {
             <input type="number" step="0.001" min="0.001" value={betAmount} onChange={(e) => setBetAmount(e.target.value)} className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500" />
           </div>
           <div className="grid grid-cols-2 gap-4">
-            <button onClick={() => handleBet(0)} disabled={isBetting} className="bg-emerald-600 hover:bg-emerald-500 text-white py-3 rounded-lg font-bold transition-colors disabled:opacity-50">
+            <button onClick={() => handleBet(0)} disabled={isBetting || !address} className="bg-emerald-600 hover:bg-emerald-500 text-white py-3 rounded-lg font-bold transition-colors disabled:opacity-50">
               {isBetting ? "Confirming..." : "Bet YES"}
             </button>
-            <button onClick={() => handleBet(1)} disabled={isBetting} className="bg-red-600 hover:bg-red-500 text-white py-3 rounded-lg font-bold transition-colors disabled:opacity-50">
+            <button onClick={() => handleBet(1)} disabled={isBetting || !address} className="bg-red-600 hover:bg-red-500 text-white py-3 rounded-lg font-bold transition-colors disabled:opacity-50">
               {isBetting ? "Confirming..." : "Bet NO"}
             </button>
           </div>
+          {!address && (
+            <p className="text-yellow-400 text-xs mt-3 text-center">Connect your wallet to place a bet</p>
+          )}
+          {betSuccess && (
+            <p className="text-emerald-400 text-sm mt-3 text-center font-medium">Bet placed successfully!</p>
+          )}
+          {betError && (
+            <p className="text-red-400 text-sm mt-3 text-center">Transaction failed. Please try again.</p>
+          )}
         </div>
       )}
 
@@ -155,6 +166,9 @@ export default function MarketDetailPage() {
             )}
             {prediction.claimed && <span className="text-emerald-400 text-sm">Claimed</span>}
           </div>
+          {claimSuccess && (
+            <p className="text-emerald-400 text-sm mt-3 font-medium">Winnings claimed successfully!</p>
+          )}
         </div>
       )}
 

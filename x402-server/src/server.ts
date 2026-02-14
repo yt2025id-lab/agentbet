@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import { paymentMiddleware } from "@x402/express";
 import {
   createPublicClient,
   createWalletClient,
@@ -94,6 +95,7 @@ const PREDICTION_MARKET_ABI = [
   },
 ] as const;
 
+// AgentRegistryV2 ABI — compatible with both legacy AgentRegistry and ERC-8004 V2
 const AGENT_REGISTRY_ABI = [
   {
     name: "getAgent",
@@ -160,35 +162,40 @@ const AGENT_REGISTRY_ABI = [
     inputs: [],
     outputs: [{ name: "", type: "uint256" }],
   },
-  {
-    name: "getAllAgentAddresses",
-    type: "function",
-    stateMutability: "view",
-    inputs: [],
-    outputs: [{ name: "", type: "address[]" }],
-  },
 ] as const;
 
 const MARKET_ADDRESS = process.env.PREDICTION_MARKET_ADDRESS as Address;
-const REGISTRY_ADDRESS = process.env.AGENT_REGISTRY_ADDRESS as Address;
+const REGISTRY_ADDRESS = process.env.AGENT_REGISTRY_ADDRESS as Address; // AgentRegistryV2 (ERC-8004 bridge)
 
 // ============================================================
 // x402 PAYMENT-GATED ENDPOINTS
 // ============================================================
-// NOTE: In production, these use @x402/express paymentMiddleware.
-// For hackathon demo, we simulate the x402 flow and focus on
-// the CRE workflow integration. The x402 middleware will be:
-//
-// app.use(paymentMiddleware({
-//   "POST /api/create-market": {
-//     accepts: [{ scheme: "exact", price: "$0.01", network: "eip155:84532",
-//                 payTo: process.env.X402_RECEIVER_ADDRESS }],
-//   },
-//   "POST /api/agent-strategy": {
-//     accepts: [{ scheme: "exact", price: "$0.001", network: "eip155:84532",
-//                 payTo: process.env.X402_RECEIVER_ADDRESS }],
-//   },
-// }, server));
+const X402_RECEIVER = process.env.X402_RECEIVER_ADDRESS;
+const X402_FACILITATOR = process.env.X402_FACILITATOR_URL || "https://x402.org/facilitator";
+
+if (X402_RECEIVER) {
+  app.use(
+    paymentMiddleware(X402_FACILITATOR, {
+      "POST /api/create-market": {
+        price: "$0.01",
+        network: "base-sepolia",
+        config: {
+          description: "Create a new prediction market via CRE workflow",
+        },
+      },
+      "POST /api/agent-strategy": {
+        price: "$0.001",
+        network: "base-sepolia",
+        config: {
+          description: "AI trading strategy analysis + auto-execute",
+        },
+      },
+    })
+  );
+  console.log("x402 payment middleware ACTIVE (receiver:", X402_RECEIVER, ")");
+} else {
+  console.log("x402 payment middleware DISABLED (set X402_RECEIVER_ADDRESS to enable)");
+}
 // ============================================================
 
 /**

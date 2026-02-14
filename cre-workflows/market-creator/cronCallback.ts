@@ -29,62 +29,78 @@ export function onCronTrigger(
 ) {
   console.log("[market-creator] Cron triggered - searching for market ideas...");
 
-  const httpClient = new cre.capabilities.HTTPClient();
-  const evmClient = new cre.capabilities.EVMClient();
-  const network = getNetwork(config.evms[0].chainSelectorName);
+  try {
+    if (!config.evms || config.evms.length === 0) {
+      console.log("[market-creator] ERROR: No EVM config found");
+      return;
+    }
 
-  // Step 1: Ask Gemini for a trending event to create a market about
-  const idea = askGeminiForMarketIdea(
-    runtime,
-    httpClient,
-    config.geminiModel
-  );
+    const httpClient = new cre.capabilities.HTTPClient();
+    const evmClient = new cre.capabilities.EVMClient();
+    const network = getNetwork(config.evms[0].chainSelectorName);
 
-  if (!idea) {
-    console.log("[market-creator] No suitable market idea found, skipping");
-    return;
+    // Step 1: Ask Gemini for a trending event to create a market about
+    const idea = askGeminiForMarketIdea(
+      runtime,
+      httpClient,
+      config.geminiModel
+    );
+
+    if (!idea) {
+      console.log("[market-creator] No suitable market idea found, skipping");
+      return;
+    }
+
+    if (!idea.question || idea.question.length < 10) {
+      console.log("[market-creator] Invalid market question from Gemini, skipping");
+      return;
+    }
+
+    const duration = idea.duration > 0 ? idea.duration : 86400; // default 24h
+    console.log(`[market-creator] Creating market: "${idea.question}"`);
+    console.log(`[market-creator] Category: ${idea.category}, Duration: ${duration}s`);
+
+    // Step 2: Encode market creation data
+    // Action 0x00 = create market
+    // Data: (string question, uint256 duration, uint256 settlementBuffer, bool isAgentCreated, address agentAddress)
+    const encodedData = encodeAbiParameters(
+      parseAbiParameters("string, uint256, uint256, bool, address"),
+      [
+        idea.question,
+        BigInt(duration),
+        BigInt(43200), // 12h settlement buffer
+        true, // isAgentCreated
+        "0x0000000000000000000000000000000000000000", // system agent (autonomous)
+      ]
+    );
+
+    // Prepend action byte 0x00
+    const reportData = ("0x00" + encodedData.slice(2)) as `0x${string}`;
+
+    // Step 3: Sign the report
+    const signedReport = cre.report
+      .sign(runtime, {
+        data: reportData,
+        signingAlgorithm: "ecdsa_secp256k1_keccak256",
+      })
+      .result();
+
+    console.log("[market-creator] Report signed, creating market on-chain...");
+
+    // Step 4: Write to chain
+    const txResult = evmClient
+      .writeReport(runtime, {
+        network: network,
+        contractAddress: config.evms[0].marketAddress,
+        gasLimit: config.evms[0].gasLimit,
+        report: signedReport,
+      })
+      .result();
+
+    console.log(`[market-creator] Market created! TX: ${txResult.transactionHash}`);
+    console.log(`[market-creator] Question: "${idea.question}"`);
+  } catch (error: any) {
+    console.log(`[market-creator] ERROR: ${error.message || error}`);
+    console.log("[market-creator] Market creation failed, will retry on next cron cycle");
   }
-
-  console.log(`[market-creator] Creating market: "${idea.question}"`);
-  console.log(`[market-creator] Category: ${idea.category}, Duration: ${idea.duration}s`);
-
-  // Step 2: Encode market creation data
-  // Action 0x00 = create market
-  // Data: (string question, uint256 duration, uint256 settlementBuffer, bool isAgentCreated, address agentAddress)
-  const encodedData = encodeAbiParameters(
-    parseAbiParameters("string, uint256, uint256, bool, address"),
-    [
-      idea.question,
-      BigInt(idea.duration),
-      BigInt(43200), // 12h settlement buffer
-      true, // isAgentCreated
-      "0x0000000000000000000000000000000000000000", // system agent (autonomous)
-    ]
-  );
-
-  // Prepend action byte 0x00
-  const reportData = ("0x00" + encodedData.slice(2)) as `0x${string}`;
-
-  // Step 3: Sign the report
-  const signedReport = cre.report
-    .sign(runtime, {
-      data: reportData,
-      signingAlgorithm: "ecdsa_secp256k1_keccak256",
-    })
-    .result();
-
-  console.log("[market-creator] Report signed, creating market on-chain...");
-
-  // Step 4: Write to chain
-  const txResult = evmClient
-    .writeReport(runtime, {
-      network: network,
-      contractAddress: config.evms[0].marketAddress,
-      gasLimit: config.evms[0].gasLimit,
-      report: signedReport,
-    })
-    .result();
-
-  console.log(`[market-creator] Market created! TX: ${txResult.transactionHash}`);
-  console.log(`[market-creator] Question: "${idea.question}"`);
 }
