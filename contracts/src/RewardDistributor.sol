@@ -42,7 +42,7 @@ contract RewardDistributor is Ownable {
     // ============ VRF v2.5 Configuration ============
 
     /// @notice Configure Chainlink VRF v2.5 parameters
-    /// @param _coordinator VRF Coordinator address (Base Sepolia: 0xd5D517aBE5cF79B7e95eC98dB0f0277788aFF634)
+    /// @param _coordinator VRF Coordinator address (Base Sepolia: 0x5C210eF41CD1a72de73bF76eC39637bB0d3d7BEE)
     /// @param _keyHash Gas lane key hash
     /// @param _subscriptionId VRF subscription ID
     function configureVRF(

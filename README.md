@@ -67,7 +67,7 @@ Built for the [Chainlink Convergence Hackathon](https://chain.link/hackathon) (F
 |---|---------|-------------|--------|---------|
 | 1 | **CRE** | 3 TypeScript→WASM workflows orchestrate market lifecycle | Simulation ✅ | [`cre-workflows/`](cre-workflows/) |
 | 2 | **Data Feeds** | agent-trader reads ETH/USD, BTC/USD, LINK/USD via `latestRoundData()` | Verified ✅ | [`agent-trader/httpCallback.ts`](cre-workflows/agent-trader/httpCallback.ts) |
-| 3 | **VRF v2.5** | RewardDistributor picks random agent winners with verifiable randomness | Deployed ✅ | [`RewardDistributor.sol`](contracts/src/RewardDistributor.sol) |
+| 3 | **VRF v2.5** | RewardDistributor picks random agent winners with verifiable randomness | Configured ✅ | [`RewardDistributor.sol`](contracts/src/RewardDistributor.sol) |
 | 4 | **Automation** | AutoSettler auto-triggers settlement for expired markets | Deployed ✅ | [`AutoSettler.sol`](contracts/src/AutoSettler.sol) |
 | 5 | **x402** | Payment-gated API for AI agent market creation and trading | Implemented | [`x402-server/`](x402-server/) |
 
@@ -220,8 +220,8 @@ cd agent-trader && cre workflow simulate . --trigger-index 0 --non-interactive &
 ```bash
 # After deploying RewardDistributor, configure VRF:
 cast send $REWARD_DISTRIBUTOR "configureVRF(address,bytes32,uint256)" \
-  0xd5D517aBE5cF79B7e95eC98dB0f0277788aFF634 \
-  0xc799bd1e3bd4d1a41cd4968997a4e03dfd2a3c7c04b695881138580163f42887 \
+  0x5C210eF41CD1a72de73bF76eC39637bB0d3d7BEE \
+  0x9e1344a1247c8a1785d0a4681a27152bffdb43666ae5bf7d14d24a5efd44bf71 \
   $VRF_SUBSCRIPTION_ID \
   --rpc-url $BASE_SEPOLIA_RPC_URL \
   --private-key $PRIVATE_KEY
@@ -299,7 +299,7 @@ Open http://localhost:3000
 - `startRewardRoundVRF()` — payable, requests randomness from **VRF Coordinator**
 - `rawFulfillRandomWords(requestId, randomWords[])` — **VRF callback**, picks random agent winner
 - `startRewardRound()` — demo mode with pseudo-random (for testing)
-- VRF Coordinator (Base Sepolia): `0xd5D517aBE5cF79B7e95eC98dB0f0277788aFF634`
+- VRF Coordinator (Base Sepolia): `0x5C210eF41CD1a72de73bF76eC39637bB0d3d7BEE`
 
 ### AutoSettler.sol (Automation)
 - **`checkUpkeep(bytes)`** — scans for expired markets (batch up to 50)
@@ -369,7 +369,7 @@ Cron (every 4h) → `EVMClient.callContract()` reads market state via `getMarket
 | Contract | Address |
 |----------|---------|
 | CRE Forwarder | `0x82300bd7c3958625581cc2F77bC6464dcEcDF3e5` |
-| VRF Coordinator | `0xd5D517aBE5cF79B7e95eC98dB0f0277788aFF634` |
+| VRF Coordinator | `0x5C210eF41CD1a72de73bF76eC39637bB0d3d7BEE` |
 | USDC | `0x036CbD53842c5426634e7929541eC2318f3dCF7e` |
 | LINK | `0xE4aB69C077896252FAFBD49EFD26B5D171A32410` |
 
