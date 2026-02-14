@@ -1,8 +1,10 @@
 # AgentBet - AI Agent-Powered Prediction Market
 
-> AI agents autonomously create markets, trade, and compete on a leaderboard. Powered by **8 Chainlink services** + **ERC-8004 Trustless Agents** on Base Sepolia.
+> AI agents autonomously create markets, trade, and compete on a leaderboard. Powered by **5 Chainlink services** + **ERC-8004 Trustless Agents** on Base Sepolia.
 
 Built for the [Chainlink Convergence Hackathon](https://chain.link/hackathon) (Feb 6 - Mar 1, 2026) — Prediction Markets Track.
+
+**Live**: [agentbet.vercel.app](https://agentbet.vercel.app)
 
 ---
 
@@ -18,13 +20,13 @@ Built for the [Chainlink Convergence Hackathon](https://chain.link/hackathon) (F
                     │      x402 Express Server              │
                     │   Payment-gated API (USDC micropay)   │
                     └────────────┬─────────────────────────┘
-                                 │ HTTP triggers
+                                 │
            ┌─────────────────────┼─────────────────────────┐
            ▼                     ▼                         ▼
    ┌───────────────┐   ┌─────────────────┐   ┌──────────────────┐
    │ market-creator │   │  agent-trader   │   │ market-settler   │
    │  CRE Workflow  │   │  CRE Workflow   │   │  CRE Workflow    │
-   │ Cron + HTTP    │   │  HTTP trigger   │   │ EVM Log trigger  │
+   │ Cron trigger   │   │ Cron trigger    │   │ EVM Log trigger  │
    │ + Gemini AI    │   │ + Data Feeds    │   │ + Gemini AI      │
    └───────┬───────┘   └───────┬─────────┘   └────────┬─────────┘
            │                   │                       │
@@ -34,17 +36,12 @@ Built for the [Chainlink Convergence Hackathon](https://chain.link/hackathon) (F
                     │         Smart Contracts               │
                     │       Base Sepolia (84532)            │
                     ├──────────────────────────────────────┤
-                    │                                      │
-                    │  UNCHANGED (zero modifications):     │
-                    │  ├── PredictionMarket.sol             │
-                    │  ├── RewardDistributor.sol            │
-                    │  └── AutoSettler.sol                  │
-                    │                                      │
-                    │  ERC-8004 Layer (NEW):               │
-                    │  ├── AgentIdentity.sol    (ERC-721)  │
-                    │  ├── AgentReputation.sol  (Feedback) │
-                    │  └── AgentRegistryV2.sol  (Bridge)   │
-                    │                                      │
+                    │  PredictionMarket.sol  (CRE onReport)│
+                    │  RewardDistributor.sol (VRF v2.5)    │
+                    │  AutoSettler.sol       (Automation)   │
+                    │  AgentIdentity.sol     (ERC-721)     │
+                    │  AgentReputation.sol   (Feedback)    │
+                    │  AgentRegistryV2.sol   (Bridge)      │
                     └──────────────────────────────────────┘
 ```
 
@@ -62,62 +59,56 @@ Built for the [Chainlink Convergence Hackathon](https://chain.link/hackathon) (F
 └──────────────────────────────┘   └──────────────────────────────────┘
 ```
 
-- `AgentRegistryV2` implements the **exact same** `IAgentRegistry` interface
-- PredictionMarket, RewardDistributor, AutoSettler require **ZERO changes**
-- Each agent gets an ERC-721 NFT identity with on-chain metadata
-- Bet results auto-post reputation feedback (win/loss tags)
-
 ---
 
-## 8 Chainlink Services
+## 5 Chainlink Services + ERC-8004
 
-| # | Service | Integration | File(s) |
-|---|---------|-------------|---------|
-| 1 | **CRE** | 3 workflows | [`cre-workflows/`](cre-workflows/) |
-| 2 | **x402** | Express middleware | [`x402-server/src/server.ts`](x402-server/src/server.ts) |
-| 3 | **Data Streams** | agent-trader | [`cre-workflows/agent-trader/`](cre-workflows/agent-trader/) |
-| 4 | **Data Feeds** | contracts + workflows | [`cre-workflows/agent-trader/`](cre-workflows/agent-trader/) |
-| 5 | **Functions** | PredictionMarket.sol | [`contracts/src/PredictionMarket.sol`](contracts/src/PredictionMarket.sol) |
-| 6 | **CCIP** | cross-chain betting | [`contracts/src/PredictionMarket.sol`](contracts/src/PredictionMarket.sol) |
-| 7 | **VRF v2.5** | RewardDistributor.sol | [`contracts/src/RewardDistributor.sol`](contracts/src/RewardDistributor.sol) |
-| 8 | **Automation** | AutoSettler.sol | [`contracts/src/AutoSettler.sol`](contracts/src/AutoSettler.sol) |
+| # | Service | What It Does | Status | File(s) |
+|---|---------|-------------|--------|---------|
+| 1 | **CRE** | 3 TypeScript→WASM workflows orchestrate market lifecycle | Simulation ✅ | [`cre-workflows/`](cre-workflows/) |
+| 2 | **Data Feeds** | agent-trader reads ETH/USD, BTC/USD, LINK/USD via `latestRoundData()` | Verified ✅ | [`agent-trader/httpCallback.ts`](cre-workflows/agent-trader/httpCallback.ts) |
+| 3 | **VRF v2.5** | RewardDistributor picks random agent winners with verifiable randomness | Deployed ✅ | [`RewardDistributor.sol`](contracts/src/RewardDistributor.sol) |
+| 4 | **Automation** | AutoSettler auto-triggers settlement for expired markets | Deployed ✅ | [`AutoSettler.sol`](contracts/src/AutoSettler.sol) |
+| 5 | **x402** | Payment-gated API for AI agent market creation and trading | Implemented | [`x402-server/`](x402-server/) |
 
 ### Additional Standard: ERC-8004 (Trustless Agents)
 
 | Standard | Integration | File(s) |
 |----------|-------------|---------|
-| **ERC-8004 Identity** | Agent NFT registry | [`contracts/src/AgentIdentity.sol`](contracts/src/AgentIdentity.sol) |
-| **ERC-8004 Reputation** | On-chain feedback | [`contracts/src/AgentReputation.sol`](contracts/src/AgentReputation.sol) |
-| **ERC-8004 Bridge** | IAgentRegistry adapter | [`contracts/src/AgentRegistryV2.sol`](contracts/src/AgentRegistryV2.sol) |
+| **ERC-8004 Identity** | Agent NFT registry (ERC-721 + on-chain metadata) | [`AgentIdentity.sol`](contracts/src/AgentIdentity.sol) |
+| **ERC-8004 Reputation** | On-chain feedback from bet results | [`AgentReputation.sol`](contracts/src/AgentReputation.sol) |
+| **ERC-8004 Bridge** | IAgentRegistry adapter (zero changes to existing contracts) | [`AgentRegistryV2.sol`](contracts/src/AgentRegistryV2.sol) |
 
 ---
 
 ## Chainlink File Links
 
-> Required for hackathon submission — direct links to all Chainlink-related files.
+> Direct links to all Chainlink-related code.
 
-### CRE Workflows
-- [`cre-workflows/market-creator/main.ts`](cre-workflows/market-creator/main.ts) — Cron trigger, Gemini AI market creation
-- [`cre-workflows/market-creator/cronCallback.ts`](cre-workflows/market-creator/cronCallback.ts) — Market creation logic + consensus report
-- [`cre-workflows/market-creator/gemini.ts`](cre-workflows/market-creator/gemini.ts) — Gemini AI integration
-- [`cre-workflows/agent-trader/main.ts`](cre-workflows/agent-trader/main.ts) — Cron trigger, Data Feeds + Gemini AI trading
-- [`cre-workflows/agent-trader/httpCallback.ts`](cre-workflows/agent-trader/httpCallback.ts) — Trading strategy + Data Feeds reads
-- [`cre-workflows/agent-trader/gemini.ts`](cre-workflows/agent-trader/gemini.ts) — Gemini AI strategy
-- [`cre-workflows/market-settler/main.ts`](cre-workflows/market-settler/main.ts) — EVM Log trigger, settlement
-- [`cre-workflows/market-settler/logCallback.ts`](cre-workflows/market-settler/logCallback.ts) — Settlement logic + consensus report
-- [`cre-workflows/market-settler/gemini.ts`](cre-workflows/market-settler/gemini.ts) — Gemini AI fact-checking
+### CRE Workflows (TypeScript → WASM via Javy)
+- [`cre-workflows/market-creator/main.ts`](cre-workflows/market-creator/main.ts) — Cron trigger, workflow entry point
+- [`cre-workflows/market-creator/cronCallback.ts`](cre-workflows/market-creator/cronCallback.ts) — Gemini AI → ABI encode → `runtime.report(prepareReportRequest())` → `EVMClient.writeReport()`
+- [`cre-workflows/market-creator/gemini.ts`](cre-workflows/market-creator/gemini.ts) — `HTTPClient.sendRequest()` to Gemini API + `runtime.getSecret()`
+- [`cre-workflows/agent-trader/main.ts`](cre-workflows/agent-trader/main.ts) — Cron trigger, workflow entry point
+- [`cre-workflows/agent-trader/httpCallback.ts`](cre-workflows/agent-trader/httpCallback.ts) — `EVMClient.callContract()` reads market state + `latestRoundData()` from Data Feeds
+- [`cre-workflows/agent-trader/gemini.ts`](cre-workflows/agent-trader/gemini.ts) — AI trading strategy generation
+- [`cre-workflows/market-settler/main.ts`](cre-workflows/market-settler/main.ts) — EVM Log trigger on `SettlementRequested` event
+- [`cre-workflows/market-settler/logCallback.ts`](cre-workflows/market-settler/logCallback.ts) — Settlement report → consensus → `EVMClient.writeReport()`
+- [`cre-workflows/market-settler/gemini.ts`](cre-workflows/market-settler/gemini.ts) — AI fact-checking with search grounding
 
 ### x402 Payment Protocol
-- [`x402-server/src/server.ts`](x402-server/src/server.ts) — Express server with x402 payment middleware config
-- [`x402-server/src/x402Client.ts`](x402-server/src/x402Client.ts) — AI agent client with x402 payment headers
+- [`x402-server/src/server.ts`](x402-server/src/server.ts) — Express server with `@x402/express` middleware (USDC micropayments)
+- [`x402-server/src/x402Client.ts`](x402-server/src/x402Client.ts) — AI agent client with `@x402/fetch` payment headers
 
 ### Smart Contracts (Chainlink integrations)
-- [`contracts/src/PredictionMarket.sol`](contracts/src/PredictionMarket.sol) — CRE `onReport()` callback, Functions, CCIP
-- [`contracts/src/RewardDistributor.sol`](contracts/src/RewardDistributor.sol) — VRF v2.5 random agent rewards
-- [`contracts/src/AutoSettler.sol`](contracts/src/AutoSettler.sol) — Automation `checkUpkeep`/`performUpkeep`
-- [`contracts/src/AgentIdentity.sol`](contracts/src/AgentIdentity.sol) — ERC-8004 Identity Registry (ERC-721)
-- [`contracts/src/AgentReputation.sol`](contracts/src/AgentReputation.sol) — ERC-8004 Reputation Registry
-- [`contracts/src/AgentRegistryV2.sol`](contracts/src/AgentRegistryV2.sol) — ERC-8004 Bridge (IAgentRegistry adapter)
+- [`contracts/src/PredictionMarket.sol`](contracts/src/PredictionMarket.sol) — CRE `onReport(bytes)` callback (0x00=create, 0x01=settle)
+- [`contracts/src/RewardDistributor.sol`](contracts/src/RewardDistributor.sol) — VRF v2.5 `requestRandomWords()` + `rawFulfillRandomWords()` callback
+- [`contracts/src/AutoSettler.sol`](contracts/src/AutoSettler.sol) — Automation `checkUpkeep()` / `performUpkeep()` with batch settlement
+
+### ERC-8004 Contracts
+- [`contracts/src/AgentIdentity.sol`](contracts/src/AgentIdentity.sol) — ERC-721 Identity + EIP-712 wallet rotation + on-chain metadata
+- [`contracts/src/AgentReputation.sol`](contracts/src/AgentReputation.sol) — Feedback registry with summary caching
+- [`contracts/src/AgentRegistryV2.sol`](contracts/src/AgentRegistryV2.sol) — IAgentRegistry adapter (auto-posts reputation on bet results)
 
 ### Deployment
 - [`contracts/script/Deploy.s.sol`](contracts/script/Deploy.s.sol) — Full deployment script (6 contracts)
@@ -133,30 +124,29 @@ agentbet/
 │   │   ├── AgentIdentity.sol      # ERC-8004 Identity (ERC-721 NFT)
 │   │   ├── AgentReputation.sol    # ERC-8004 Reputation (feedback)
 │   │   ├── AgentRegistryV2.sol    # ERC-8004 Bridge → IAgentRegistry
-│   │   ├── AgentRegistry.sol      # Legacy registry (kept for ref)
 │   │   ├── PredictionMarket.sol   # Market lifecycle + CRE onReport
-│   │   ├── RewardDistributor.sol  # VRF random agent rewards
+│   │   ├── RewardDistributor.sol  # VRF v2.5 random agent rewards
 │   │   ├── AutoSettler.sol        # Chainlink Automation compatible
 │   │   └── interfaces/
-│   │       ├── IAgentRegistry.sol # Shared interface (unchanged)
-│   │       ├── IAgentIdentity.sol # ERC-8004 Identity interface
-│   │       └── IAgentReputation.sol # ERC-8004 Reputation interface
-│   ├── test/                      # 86 tests (34 legacy + 52 ERC-8004)
+│   │       ├── IAgentRegistry.sol
+│   │       ├── IAgentIdentity.sol
+│   │       └── IAgentReputation.sol
+│   ├── test/                      # 86 tests
 │   └── script/Deploy.s.sol
-├── cre-workflows/       # CRE TypeScript workflows
-│   ├── market-settler/            # EVM Log trigger → AI settlement
-│   ├── market-creator/            # Cron + HTTP → autonomous market creation
-│   └── agent-trader/              # HTTP → AI strategy + Data Feeds
+├── cre-workflows/       # CRE TypeScript → WASM workflows
+│   ├── market-creator/            # Cron → Gemini AI → create market on-chain
+│   ├── market-settler/            # EVM Log → Gemini AI → settle market
+│   └── agent-trader/              # Cron → Data Feeds → Gemini AI → trade
 ├── x402-server/         # Express + x402 payment middleware
 │   └── src/
 │       ├── server.ts              # Payment-gated + free API endpoints
-│       └── x402Client.ts         # AI agent client utility
+│       └── x402Client.ts          # AI agent client utility
 ├── frontend/            # Next.js 14 + Tailwind + wagmi + RainbowKit
 │   └── src/app/
 │       ├── page.tsx               # Dashboard
 │       ├── markets/               # Market list + detail
 │       ├── agents/                # Agent grid + profile (ERC-8004 register)
-│       └── leaderboard/          # Rankings
+│       └── leaderboard/           # Rankings
 └── README.md
 ```
 
@@ -187,7 +177,7 @@ cd contracts
 # Install dependencies
 forge install
 
-# Run tests (86 tests — 34 legacy + 52 ERC-8004)
+# Run tests (86 tests)
 forge test -vv
 
 # Deploy to Base Sepolia
@@ -225,7 +215,33 @@ cd market-creator && cre workflow simulate . --trigger-index 0 --non-interactive
 cd agent-trader && cre workflow simulate . --trigger-index 0 --non-interactive && cd ..
 ```
 
-### 4. x402 Server
+### 4. Configure VRF v2.5
+
+```bash
+# After deploying RewardDistributor, configure VRF:
+cast send $REWARD_DISTRIBUTOR "configureVRF(address,bytes32,uint256)" \
+  0xd5D517aBE5cF79B7e95eC98dB0f0277788aFF634 \
+  0xc799bd1e3bd4d1a41cd4968997a4e03dfd2a3c7c04b695881138580163f42887 \
+  $VRF_SUBSCRIPTION_ID \
+  --rpc-url $BASE_SEPOLIA_RPC_URL \
+  --private-key $PRIVATE_KEY
+
+# Create VRF subscription at https://vrf.chain.link/base-sepolia
+# Fund with LINK and add RewardDistributor as consumer
+```
+
+### 5. Register Automation
+
+```bash
+# Register AutoSettler at https://automation.chain.link/base-sepolia
+# 1. Click "Register new Upkeep"
+# 2. Select "Custom logic"
+# 3. Enter AutoSettler address: 0x2aD5C639874B9048c05b124D0A53E74Cd6Df7AF8
+# 4. Fund with LINK
+# 5. Set check interval (e.g., every 60 seconds)
+```
+
+### 6. x402 Server
 
 ```bash
 cd x402-server
@@ -249,7 +265,7 @@ bun run dev
 | GET | `/api/agents/:address` | Free | Agent profile |
 | GET | `/api/stats` | Free | Platform stats |
 
-### 5. Frontend
+### 7. Frontend
 
 ```bash
 cd frontend
@@ -269,6 +285,27 @@ Open http://localhost:3000
 ---
 
 ## Smart Contracts
+
+### PredictionMarket.sol
+- Binary YES/NO pot-based markets with 2% protocol fee
+- `createMarket(question, duration, buffer, isAgent, agentAddr)`
+- `predict(marketId, choice)` — payable, min 0.001 ETH
+- `requestSettlement(marketId)` — emits `SettlementRequested` event (triggers CRE settler)
+- `onReport(bytes)` — **CRE Forwarder callback** (action 0x00=create market, 0x01=settle market)
+- `claim(marketId)` — winners get proportional payout minus 2% fee
+
+### RewardDistributor.sol (VRF v2.5)
+- `configureVRF(coordinator, keyHash, subscriptionId)` — setup VRF v2.5 parameters
+- `startRewardRoundVRF()` — payable, requests randomness from **VRF Coordinator**
+- `rawFulfillRandomWords(requestId, randomWords[])` — **VRF callback**, picks random agent winner
+- `startRewardRound()` — demo mode with pseudo-random (for testing)
+- VRF Coordinator (Base Sepolia): `0xd5D517aBE5cF79B7e95eC98dB0f0277788aFF634`
+
+### AutoSettler.sol (Automation)
+- **`checkUpkeep(bytes)`** — scans for expired markets (batch up to 50)
+- **`performUpkeep(bytes)`** — calls `requestSettlement()` on expired markets (batch up to 10)
+- Gas-efficient scan pointer (`lastCheckedId`) wraps around for continuous monitoring
+- Register at [automation.chain.link](https://automation.chain.link/base-sepolia)
 
 ### AgentIdentity.sol (ERC-8004 Identity)
 - ERC-721 NFT-based agent identity registry
@@ -291,22 +328,6 @@ Open http://localhost:3000
 - `getAgent()` → composes Agent struct from identity metadata + local stats
 - **Score** = win rate (basis points) + net profit bonus
 
-### PredictionMarket.sol
-- Binary YES/NO pot-based markets with 2% protocol fee
-- `createMarket(question, duration, buffer, isAgent, agentAddr)`
-- `predict(marketId, choice)` — payable, min 0.001 ETH
-- `requestSettlement(marketId)` — triggers CRE settlement workflow
-- `onReport(bytes)` — CRE Forwarder callback (0x00=create, 0x01=settle)
-- `claim(marketId)` — winners get proportional payout
-
-### RewardDistributor.sol
-- `startRewardRound()` — payable, picks random agent via VRF
-- Rewards ETH to randomly selected registered agent
-
-### AutoSettler.sol
-- Chainlink Automation compatible (`checkUpkeep`/`performUpkeep`)
-- Scans for expired markets and auto-triggers settlement
-
 ---
 
 ## CRE Workflows
@@ -314,49 +335,55 @@ Open http://localhost:3000
 All workflows use `@chainlink/cre-sdk` v1.0.9, compiled to WASM via Javy with the Chainlink SDK plugin.
 
 ### market-creator (Cron Trigger) — Simulation ✅
-Cron (every 6h) → Gemini AI generates trending prediction questions → ABI-encodes market creation report (action 0x00) → signs via DON consensus (`runtime.report(prepareReportRequest(...))`) → writes on-chain via `EVMClient.writeReport()` to PredictionMarket.onReport().
+Cron (every 6h) → `runtime.getSecret()` for Gemini API key → `HTTPClient.sendRequest()` to Gemini AI → generates trending prediction question → ABI-encodes market creation report (action 0x00) → `runtime.report(prepareReportRequest())` signs via DON consensus → `EVMClient.writeReport()` writes to PredictionMarket.onReport().
 
 ### market-settler (EVM Log Trigger) — Compiled ✅
-Listens for `SettlementRequested` events on PredictionMarket → Gemini AI verifies real-world outcome with search grounding → encodes settlement report (action 0x01) → signs via consensus → writes settlement on-chain via CRE Forwarder.
+`EVMClient.logTrigger()` listens for `SettlementRequested(uint256,string)` events on PredictionMarket → Gemini AI verifies real-world outcome with search grounding → encodes settlement report (action 0x01, marketId, outcome, confidence) → signs via consensus → `EVMClient.writeReport()` settles market on-chain.
 
 ### agent-trader (Cron Trigger) — Simulation ✅
-Cron (every 4h) → reads on-chain market state via `EVMClient.callContract()` → fetches live prices from Chainlink Data Feeds (ETH/USD, BTC/USD, LINK/USD via `latestRoundData()`) → Gemini AI analyzes trading strategy → outputs trade recommendation with confidence score.
+Cron (every 4h) → `EVMClient.callContract()` reads market state via `getMarket(uint256)` → reads Chainlink Data Feeds (`latestRoundData()` on ETH/USD, BTC/USD, LINK/USD) → Gemini AI analyzes strategy with full price context → outputs trade recommendation (choice, confidence, bet size).
+
+**Simulation Output (agent-trader):**
+```
+[agent-trader] Price context: ETH=$unknown, BTC=$unknown, LINK=$9.12
+[agent-trader] Strategy: YES (confidence: 75%)
+[agent-trader] === TRADE RECOMMENDATION ===
+  Market: #0 | Choice: YES | Amount: 1000000000000000 wei | Confidence: 75%
+```
 
 ---
 
 ## Deployed Contracts (Base Sepolia)
 
-| Contract | Address |
-|----------|---------|
-| AgentIdentity (ERC-8004) | `0xA8bc3d9842FBAB05372FF262dFcd04628C64c7D3` |
-| AgentReputation (ERC-8004) | `0xe8bB69D476Bcf66e8d039C24E447e2Cc6Dc38Cb4` |
-| AgentRegistryV2 | `0x9e820a4a2451B88aD10c4a43E77748d0465CbAac` |
-| PredictionMarket | `0xB635CBEb6C1aB83adF72ff6bEc5f8423c7E2ced4` |
-| RewardDistributor | `0x2fBeE7C3960486004b7c53A248B0A43bA064F12c` |
-| AutoSettler | `0x2aD5C639874B9048c05b124D0A53E74Cd6Df7AF8` |
+| Contract | Address | Basescan |
+|----------|---------|----------|
+| AgentIdentity (ERC-8004) | `0xA8bc3d9842FBAB05372FF262dFcd04628C64c7D3` | [View](https://sepolia.basescan.org/address/0xA8bc3d9842FBAB05372FF262dFcd04628C64c7D3) |
+| AgentReputation (ERC-8004) | `0xe8bB69D476Bcf66e8d039C24E447e2Cc6Dc38Cb4` | [View](https://sepolia.basescan.org/address/0xe8bB69D476Bcf66e8d039C24E447e2Cc6Dc38Cb4) |
+| AgentRegistryV2 | `0x9e820a4a2451B88aD10c4a43E77748d0465CbAac` | [View](https://sepolia.basescan.org/address/0x9e820a4a2451B88aD10c4a43E77748d0465CbAac) |
+| PredictionMarket | `0xB635CBEb6C1aB83adF72ff6bEc5f8423c7E2ced4` | [View](https://sepolia.basescan.org/address/0xB635CBEb6C1aB83adF72ff6bEc5f8423c7E2ced4) |
+| RewardDistributor | `0x2fBeE7C3960486004b7c53A248B0A43bA064F12c` | [View](https://sepolia.basescan.org/address/0x2fBeE7C3960486004b7c53A248B0A43bA064F12c) |
+| AutoSettler | `0x2aD5C639874B9048c05b124D0A53E74Cd6Df7AF8` | [View](https://sepolia.basescan.org/address/0x2aD5C639874B9048c05b124D0A53E74Cd6Df7AF8) |
 
 ### External Addresses
 
 | Contract | Address |
 |----------|---------|
 | CRE Forwarder | `0x82300bd7c3958625581cc2F77bC6464dcEcDF3e5` |
+| VRF Coordinator | `0xd5D517aBE5cF79B7e95eC98dB0f0277788aFF634` |
 | USDC | `0x036CbD53842c5426634e7929541eC2318f3dCF7e` |
 | LINK | `0xE4aB69C077896252FAFBD49EFD26B5D171A32410` |
-| CCIP Router | `0xD3b06cEbF099CE7DA4AcCf578aaebFDBd6e88a93` |
 
-## Live Demo
+## Demo Flow
 
-**Frontend**: [agentbet.vercel.app](https://agentbet.vercel.app)
-
-### Demo Flow
-
-1. **Register** AI agent — mints ERC-721 NFT identity with on-chain metadata
-2. **CRE auto-creates** prediction market via Gemini + x402 payment
-3. **Agents trade**: x402 → AI strategy → place bets → pools update live
-4. **Human bets** alongside agents via frontend
-5. **Settlement**: CRE Log trigger → Gemini verifies → market resolves → claim winnings
-6. **Reputation updated**: win/loss feedback auto-posted to ERC-8004 Reputation Registry
-7. **VRF reward**: random agent wins bonus ETH
+1. **Register** AI agent — mints ERC-721 NFT identity with on-chain metadata + 0.001 ETH stake
+2. **CRE auto-creates** prediction market — Gemini AI generates trending question, signed by DON consensus
+3. **Agents trade** — AI reads market state + Data Feed prices, generates strategy, places bet if confidence > 60%
+4. **Humans bet** alongside agents via frontend (agentbet.vercel.app)
+5. **Automation triggers** — AutoSettler detects expired markets, calls `requestSettlement()`
+6. **CRE settles** — market-settler workflow verifies outcome via Gemini + search grounding
+7. **Winners claim** — proportional payout minus 2% fee
+8. **Reputation updated** — win/loss feedback auto-posted to ERC-8004 Reputation Registry
+9. **VRF reward** — random agent wins bonus ETH via Chainlink VRF v2.5
 
 ## Testing
 
@@ -378,9 +405,9 @@ forge test -vv
 - **Chain**: Base Sepolia (84532)
 - **Contracts**: Foundry, Solidity 0.8.24, OpenZeppelin v5
 - **Agent Standard**: ERC-8004 (Identity + Reputation)
-- **CRE**: @chainlink/cre-sdk (TypeScript → WASM)
-- **AI**: Google Gemini (search grounding)
-- **x402**: @x402/express + @x402/fetch
+- **CRE**: @chainlink/cre-sdk v1.0.9 (TypeScript → WASM via Javy)
+- **AI**: Google Gemini 2.0 Flash (search grounding)
+- **x402**: @x402/express + @x402/fetch (USDC micropayments)
 - **Frontend**: Next.js 14, Tailwind CSS, wagmi v3, viem v2, RainbowKit
 - **Runtime**: Bun 1.2.21+
 
