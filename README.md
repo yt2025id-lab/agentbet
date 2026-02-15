@@ -68,7 +68,7 @@ Built for the [Chainlink Convergence Hackathon](https://chain.link/hackathon) (F
 | 1 | **CRE** | 3 TypeScript→WASM workflows orchestrate market lifecycle | Simulation ✅ | [`cre-workflows/`](cre-workflows/) |
 | 2 | **Data Feeds** | agent-trader reads ETH/USD, BTC/USD, LINK/USD via `latestRoundData()` | Verified ✅ | [`agent-trader/httpCallback.ts`](cre-workflows/agent-trader/httpCallback.ts) |
 | 3 | **VRF v2.5** | RewardDistributor picks random agent winners with verifiable randomness | Configured ✅ | [`RewardDistributor.sol`](contracts/src/RewardDistributor.sol) |
-| 4 | **Automation** | AutoSettler auto-triggers settlement for expired markets | Deployed ✅ | [`AutoSettler.sol`](contracts/src/AutoSettler.sol) |
+| 4 | **Automation** | AutoSettler auto-triggers settlement for expired markets | Registered ✅ | [`AutoSettler.sol`](contracts/src/AutoSettler.sol) |
 | 5 | **x402** | Payment-gated API for AI agent market creation and trading | Implemented | [`x402-server/`](x402-server/) |
 
 ### Additional Standard: ERC-8004 (Trustless Agents)
