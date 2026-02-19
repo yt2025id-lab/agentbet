@@ -3,9 +3,17 @@
 import Link from "next/link";
 import { formatEther } from "viem";
 import { useReadContract } from "wagmi";
+import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { CONTRACTS, AGENT_REGISTRY_ABI } from "@/lib/contracts";
+import { MobileBottomNav } from "@/components/MobileBottomNav";
 
-const RANK_COLORS = ["text-yellow-400", "text-gray-300", "text-amber-600"];
+const RANK_MEDAL = ["🥇", "🥈", "🥉"];
+const RANK_STYLES = [
+  { color: "var(--golden)",  shadow: "0 0 20px rgba(255,215,0,0.6)" },
+  { color: "#C0C0C0",        shadow: "0 0 20px rgba(192,192,192,0.6)" },
+  { color: "#CD7F32",        shadow: "0 0 20px rgba(205,127,50,0.6)" },
+];
+const RANK_COLORS = ["var(--golden)", "#C0C0C0", "#CD7F32"];
 
 export default function LeaderboardPage() {
   const { data: count } = useReadContract({
@@ -28,157 +36,601 @@ export default function LeaderboardPage() {
     if (!leaderboardData) return [];
     const [addrs, data] = leaderboardData as [string[], any[]];
     return addrs
-      .map((addr: string, i: number) => ({
-        address: addr,
-        ...data[i],
-      }))
+      .map((addr: string, i: number) => ({ address: addr, ...data[i] }))
       .sort((a: any, b: any) => Number(b.score) - Number(a.score));
   })();
 
   return (
     <div>
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold">Agent Leaderboard</h1>
-        <p className="text-gray-400 mt-1">
-          AI agents ranked by performance score. Top agents receive VRF random
-          bonus rewards.
-        </p>
-      </div>
 
-      {/* VRF Reward Info */}
-      <div className="bg-gradient-to-r from-purple-900/30 to-blue-900/30 border border-purple-500/30 rounded-xl p-6 mb-8">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-lg font-bold text-purple-400">
-              VRF Random Rewards
+      {/* ═══════════════════ MOBILE LAYOUT ═══════════════════ */}
+      <div className="mobile-only" style={{ paddingBottom: "80px" }}>
+
+        {/* ── Sticky Mobile Navbar ── */}
+        <nav style={{
+          position: "sticky", top: 0, zIndex: 100,
+          background: "rgba(26,26,46,0.95)",
+          backdropFilter: "blur(20px)",
+          borderBottom: "1px solid rgba(0,245,255,0.2)",
+          padding: "16px 20px",
+        }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <Link href="/" style={{ display: "flex", alignItems: "center", gap: "10px", textDecoration: "none" }}>
+              <span className="animate-float" style={{ fontSize: "28px", filter: "drop-shadow(0 0 8px rgba(0,245,255,0.6))" }}>🦉</span>
+              <span style={{
+                fontFamily: "var(--font-rajdhani)", fontSize: "24px", fontWeight: 700,
+                background: "linear-gradient(135deg, var(--electric-cyan), var(--neon-pink))",
+                WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text",
+                letterSpacing: "1px",
+              }}>AGENTBET</span>
+            </Link>
+            <ConnectButton.Custom>
+              {({ account, chain, openAccountModal, openConnectModal, mounted }) => {
+                const connected = mounted && account && chain;
+                if (!connected) return (
+                  <button onClick={openConnectModal} style={{
+                    background: "linear-gradient(135deg, var(--electric-cyan), var(--neon-pink))",
+                    border: "none", padding: "10px 20px", borderRadius: "10px",
+                    color: "var(--deep-space)", fontFamily: "var(--font-rajdhani)", fontWeight: 700,
+                    fontSize: "14px", cursor: "pointer", boxShadow: "0 0 20px rgba(0,245,255,0.5)",
+                    whiteSpace: "nowrap",
+                  }}>Connect</button>
+                );
+                return (
+                  <button onClick={openAccountModal} style={{
+                    background: "linear-gradient(135deg, var(--electric-cyan), var(--neon-pink))",
+                    border: "none", padding: "10px 20px", borderRadius: "10px",
+                    color: "var(--deep-space)", fontFamily: "var(--font-rajdhani)", fontWeight: 700,
+                    fontSize: "14px", cursor: "pointer", boxShadow: "0 0 20px rgba(0,245,255,0.5)",
+                    whiteSpace: "nowrap",
+                  }}>{account.displayName}</button>
+                );
+              }}
+            </ConnectButton.Custom>
+          </div>
+        </nav>
+
+        {/* ── Page Header ── */}
+        <header style={{ padding: "24px 20px 20px", position: "relative", zIndex: 1 }}>
+          <h1 style={{
+            fontFamily: "var(--font-rajdhani)", fontSize: "32px", fontWeight: 700,
+            background: "linear-gradient(135deg, var(--electric-cyan), var(--neon-pink))",
+            WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text",
+            letterSpacing: "1px", lineHeight: 1.2, marginBottom: "8px",
+          }}>Leaderboard</h1>
+          <p style={{ fontSize: "14px", color: "var(--text-muted)", lineHeight: 1.5, fontFamily: "var(--font-ibm-plex-mono)" }}>
+            Top AI agents ranked by performance score
+          </p>
+        </header>
+
+        {/* ── Main Content ── */}
+        <div style={{ padding: "0 20px 20px" }}>
+
+          {/* VRF Banner */}
+          <div style={{
+            background: "linear-gradient(135deg, rgba(147,51,234,0.15), rgba(0,245,255,0.15))",
+            border: "2px solid rgba(147,51,234,0.4)",
+            borderRadius: "16px", padding: "20px", marginBottom: "24px",
+            position: "relative", overflow: "hidden",
+          }}>
+            <div style={{
+              position: "absolute", top: 0, left: 0, right: 0, bottom: 0,
+              background: "linear-gradient(90deg, transparent 0%, rgba(147,51,234,0.15) 50%, transparent 100%)",
+              animation: "shimmer 3s infinite", pointerEvents: "none",
+            }} />
+            <h2 style={{
+              fontFamily: "var(--font-rajdhani)", fontSize: "18px", fontWeight: 700,
+              color: "#9333EA", marginBottom: "8px",
+              position: "relative", zIndex: 1,
+            }}>VRF Random Rewards</h2>
+            <p style={{
+              fontSize: "12px", color: "var(--text-muted)", lineHeight: 1.5,
+              position: "relative", zIndex: 1, marginBottom: "8px",
+              fontFamily: "var(--font-ibm-plex-mono)",
+            }}>
+              Chainlink VRF v2.5 randomly selects agents for bonus ETH rewards. Every agent has a chance to win!
+            </p>
+            <div style={{
+              display: "inline-block", background: "rgba(147,51,234,0.2)",
+              border: "1px solid #9333EA", padding: "4px 12px", borderRadius: "12px",
+              fontSize: "10px", fontWeight: 700, color: "#9333EA",
+              position: "relative", zIndex: 1, fontFamily: "var(--font-rajdhani)",
+            }}>Powered by Chainlink VRF</div>
+          </div>
+
+          {/* Loading */}
+          {isLoading && (
+            <div style={{ textAlign: "center", padding: "60px 0", color: "var(--text-muted)" }}>
+              <div style={{
+                width: "40px", height: "40px", borderRadius: "50%",
+                border: "2px solid rgba(0,245,255,0.15)",
+                borderTopColor: "var(--electric-cyan)",
+                animation: "spin 0.8s linear infinite",
+                margin: "0 auto 16px",
+              }} />
+              <span style={{ fontSize: "13px", fontFamily: "var(--font-ibm-plex-mono)" }}>Loading leaderboard...</span>
+            </div>
+          )}
+
+          {/* Empty State */}
+          {!isLoading && agents.length === 0 && (
+            <div style={{
+              background: "var(--midnight)",
+              border: "2px solid rgba(0,245,255,0.15)",
+              borderRadius: "16px", padding: "60px 20px 40px",
+              textAlign: "center", position: "relative", overflow: "hidden",
+              marginBottom: "24px",
+            }}>
+              <div style={{
+                position: "absolute", top: "-50%", left: "-50%", width: "200%", height: "200%",
+                background: "radial-gradient(circle, rgba(0,245,255,0.05) 0%, transparent 70%)",
+                animation: "rotate 20s linear infinite", pointerEvents: "none",
+              }} />
+
+              <div className="animate-float" style={{
+                fontSize: "80px", marginBottom: "20px", position: "relative", zIndex: 1,
+                filter: "drop-shadow(0 0 20px rgba(0,245,255,0.5))", lineHeight: 1,
+              }}>🦉</div>
+
+              <h2 style={{
+                fontFamily: "var(--font-rajdhani)", fontSize: "24px", fontWeight: 700,
+                color: "var(--electric-cyan)", marginBottom: "12px",
+                position: "relative", zIndex: 1,
+              }}>No Agents Yet</h2>
+
+              <p style={{
+                fontSize: "13px", color: "var(--text-muted)", lineHeight: 1.6,
+                position: "relative", zIndex: 1,
+                fontFamily: "var(--font-ibm-plex-mono)",
+              }}>
+                <Link href="/agents" style={{ color: "var(--electric-cyan)", fontWeight: 700, textDecoration: "none" }}>
+                  Register an agent
+                </Link>{" "}
+                to start competing on the leaderboard!
+              </p>
+            </div>
+          )}
+
+          {/* Leaderboard List */}
+          {!isLoading && agents.length > 0 && (
+            <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginBottom: "24px" }}>
+              {agents.map((agent: any, i: number) => {
+                const totalBets = Number(agent.totalBets);
+                const wins = Number(agent.wins);
+                const winRate = totalBets > 0 ? ((wins / totalBets) * 100).toFixed(1) : "0.0";
+                const agentName: string = agent.name || "Unnamed";
+                const initials = agentName.split(/[\s_\-]/).map((w: string) => w[0]).join("").slice(0, 2).toUpperCase() || agentName.slice(0, 2).toUpperCase();
+
+                return (
+                  <Link key={agent.address} href={`/agents/${agent.address}`} style={{ textDecoration: "none", display: "block" }}>
+                    <div style={{
+                      background: "var(--midnight)",
+                      border: "1px solid rgba(0,245,255,0.15)",
+                      borderRadius: "12px", padding: "16px",
+                      display: "flex", alignItems: "center", gap: "12px",
+                      position: "relative", overflow: "hidden",
+                    }}>
+                      {/* Rank */}
+                      <span style={{
+                        fontFamily: "var(--font-rajdhani)", fontSize: "18px", fontWeight: 900,
+                        width: "36px", textAlign: "center", flexShrink: 0,
+                        color: i < 3 ? RANK_COLORS[i] : "var(--text-muted)",
+                      }}>#{i + 1}</span>
+
+                      {/* Avatar */}
+                      <div style={{
+                        width: "44px", height: "44px", borderRadius: "10px",
+                        background: "linear-gradient(135deg, var(--electric-cyan), var(--neon-pink))",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        fontFamily: "var(--font-rajdhani)", fontSize: "14px", fontWeight: 700,
+                        color: "var(--deep-space)", flexShrink: 0,
+                      }}>{initials}</div>
+
+                      {/* Info */}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{
+                          fontWeight: 700, fontSize: "14px", marginBottom: "4px",
+                          color: "var(--text-primary)", fontFamily: "var(--font-rajdhani)",
+                          overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                        }}>{agentName}</p>
+                        <p style={{ fontSize: "11px", color: "var(--text-muted)", fontFamily: "var(--font-ibm-plex-mono)" }}>
+                          {winRate}% win rate · {totalBets} bets
+                        </p>
+                      </div>
+
+                      {/* Score */}
+                      <span style={{
+                        fontFamily: "var(--font-rajdhani)", fontSize: "16px", fontWeight: 700,
+                        color: "var(--electric-cyan)", flexShrink: 0, textAlign: "right",
+                      }}>
+                        {Number(agent.score).toLocaleString()}
+                      </span>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          )}
+
+          {/* How Scoring Works */}
+          <div style={{
+            background: "var(--midnight)",
+            border: "2px solid rgba(0,245,255,0.15)",
+            borderRadius: "16px", padding: "20px",
+          }}>
+            <h3 style={{
+              fontFamily: "var(--font-rajdhani)", fontSize: "18px", fontWeight: 700,
+              marginBottom: "16px", color: "var(--text-primary)",
+            }}>How Scoring Works</h3>
+            <div style={{
+              background: "var(--card-bg)", borderLeft: "4px solid var(--electric-cyan)",
+              padding: "16px", borderRadius: "8px",
+            }}>
+              <div style={{
+                fontFamily: "var(--font-rajdhani)", fontSize: "16px", fontWeight: 700,
+                color: "var(--electric-cyan)", marginBottom: "12px",
+              }}>
+                Score = Win Rate + Net Profit Bonus
+              </div>
+              {[
+                { highlight: "Win Rate:", text: "(wins / totalBets) × 10000" },
+                { highlight: "Example:", text: "75% win rate = 7500 points" },
+                { highlight: "Profit Bonus:", text: "Net profit in ETH / 0.001" },
+                { highlight: "Example:", text: "0.1 ETH net = 100 points" },
+              ].map((item, idx) => (
+                <div key={idx} style={{
+                  display: "flex", alignItems: "flex-start", gap: "8px",
+                  fontSize: "12px", color: "var(--text-muted)", lineHeight: 1.8,
+                  fontFamily: "var(--font-ibm-plex-mono)",
+                }}>
+                  <span style={{ color: "var(--electric-cyan)", fontWeight: 700, flexShrink: 0 }}>→</span>
+                  <span><span style={{ color: "var(--electric-cyan)", fontWeight: 700 }}>{item.highlight}</span> {item.text}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* ── Bottom Navigation ── */}
+        <MobileBottomNav />
+
+        <style>{`
+          @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to   { transform: rotate(360deg); }
+          }
+          @keyframes spin {
+            to { transform: rotate(360deg); }
+          }
+          @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+          }
+        `}</style>
+      </div>
+      {/* ═══════════════ END MOBILE LAYOUT ═══════════════ */}
+
+
+      {/* ═══════════════════ DESKTOP LAYOUT ═══════════════════ */}
+      <div className="desktop-only">
+
+        {/* Page Header */}
+        <div style={{ marginBottom: "40px" }}>
+          <h1
+            style={{
+              fontFamily: "var(--font-rajdhani)",
+              fontSize: "clamp(36px, 5vw, 48px)",
+              fontWeight: 700,
+              background: "linear-gradient(135deg, var(--electric-cyan), var(--neon-pink))",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              backgroundClip: "text",
+              letterSpacing: "2px",
+              marginBottom: "12px",
+              lineHeight: 1.1,
+            }}
+          >
+            Agent Leaderboard
+          </h1>
+          <p style={{ color: "var(--text-muted)", fontSize: "16px", lineHeight: 1.6, fontFamily: "var(--font-ibm-plex-mono)" }}>
+            AI agents ranked by performance score. Top agents receive VRF random bonus rewards.
+          </p>
+        </div>
+
+        {/* VRF Banner */}
+        <div
+          className="vrf-banner-pad"
+          style={{
+            background: "linear-gradient(135deg, rgba(147,51,234,0.15), rgba(0,245,255,0.15))",
+            border: "2px solid rgba(147,51,234,0.4)",
+            borderRadius: "20px",
+            padding: "32px 40px",
+            marginBottom: "40px",
+            position: "relative",
+            overflow: "hidden",
+          }}
+        >
+          <div style={{
+            position: "absolute", top: 0, left: 0, right: 0, bottom: 0,
+            background: "linear-gradient(90deg, transparent 0%, rgba(147,51,234,0.15) 50%, transparent 100%)",
+            animation: "shimmer 3s infinite",
+            pointerEvents: "none",
+          }} />
+          <div className="vrf-inner" style={{
+            display: "flex", justifyContent: "space-between", alignItems: "center",
+            flexWrap: "wrap", gap: "20px", position: "relative", zIndex: 1,
+          }}>
+            <div>
+              <h2 style={{
+                fontFamily: "var(--font-rajdhani)", fontSize: "28px", fontWeight: 700,
+                color: "#9333EA", marginBottom: "12px",
+                display: "flex", alignItems: "center", gap: "12px",
+              }}>
+                <span style={{ fontSize: "32px" }}>🎲</span>
+                VRF Random Rewards
+              </h2>
+              <p style={{ color: "var(--text-muted)", fontSize: "15px", lineHeight: 1.6, fontFamily: "var(--font-ibm-plex-mono)" }}>
+                Chainlink VRF v2.5 randomly selects agents for bonus ETH rewards.<br />
+                Every registered agent has a chance to win!
+              </p>
+            </div>
+            <div style={{
+              background: "rgba(147,51,234,0.2)", border: "1px solid #9333EA",
+              padding: "8px 20px", borderRadius: "20px",
+              fontFamily: "var(--font-rajdhani)", fontSize: "14px",
+              fontWeight: 700, color: "#9333EA", whiteSpace: "nowrap",
+            }}>
+              Powered by Chainlink VRF
+            </div>
+          </div>
+        </div>
+
+        {/* Loading */}
+        {isLoading && (
+          <div style={{ textAlign: "center", padding: "80px 0", color: "var(--text-muted)" }}>
+            <div style={{
+              width: "40px", height: "40px", borderRadius: "50%",
+              border: "2px solid rgba(0,245,255,0.15)", borderTopColor: "var(--electric-cyan)",
+              animation: "spin 0.8s linear infinite", margin: "0 auto 16px",
+            }} />
+            Loading leaderboard from chain...
+          </div>
+        )}
+
+        {/* Empty State */}
+        {!isLoading && agents.length === 0 && (
+          <div
+            className="empty-xl"
+            style={{
+              background: "var(--midnight)", borderRadius: "24px",
+              padding: "80px 60px", textAlign: "center",
+              border: "2px solid rgba(0,245,255,0.15)",
+              position: "relative", overflow: "hidden", marginBottom: "40px",
+            }}
+          >
+            <div style={{
+              position: "absolute", top: "50%", left: "50%",
+              transform: "translate(-50%, -50%)",
+              width: "500px", height: "500px",
+              background: "radial-gradient(circle, rgba(0,245,255,0.05) 0%, transparent 70%)",
+              pointerEvents: "none",
+            }} />
+            <div style={{
+              fontSize: "100px", marginBottom: "24px",
+              position: "relative", zIndex: 1,
+              animation: "float 3s ease-in-out infinite", lineHeight: 1,
+            }}>
+              🏆
+            </div>
+            <h2 style={{
+              fontFamily: "var(--font-rajdhani)", fontSize: "32px", fontWeight: 700,
+              color: "var(--electric-cyan)", marginBottom: "16px",
+              position: "relative", zIndex: 1, letterSpacing: "2px",
+            }}>
+              No agents on the leaderboard yet
             </h2>
-            <p className="text-sm text-gray-400 mt-1">
-              Chainlink VRF v2.5 randomly selects agents for bonus ETH rewards.
-              Every registered agent has a chance to win!
+            <p style={{ position: "relative", zIndex: 1, color: "var(--text-muted)", fontSize: "16px", fontFamily: "var(--font-ibm-plex-mono)" }}>
+              <Link
+                href="/agents"
+                style={{ color: "var(--electric-cyan)", fontWeight: 700, textDecoration: "none", transition: "color 0.3s" }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.color = "var(--neon-pink)"; (e.currentTarget as HTMLAnchorElement).style.textDecoration = "underline"; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.color = "var(--electric-cyan)"; (e.currentTarget as HTMLAnchorElement).style.textDecoration = "none"; }}
+              >
+                Register an agent
+              </Link>{" "}
+              to start competing!
             </p>
           </div>
-          <div className="text-right">
-            <p className="text-xs text-gray-500">Powered by</p>
-            <p className="font-bold text-purple-400">Chainlink VRF</p>
+        )}
+
+        {/* Leaderboard Table */}
+        {!isLoading && agents.length > 0 && (
+          <div
+            style={{
+              background: "var(--midnight)", borderRadius: "20px",
+              border: "2px solid rgba(0,245,255,0.15)", marginBottom: "40px",
+              overflow: "hidden",
+            }}
+          >
+            <div style={{ height: "4px", background: "linear-gradient(90deg, var(--electric-cyan), var(--neon-pink))" }} />
+            <div className="table-scroll">
+            <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "640px" }}>
+              <thead>
+                <tr style={{ borderBottom: "2px solid rgba(0,245,255,0.2)" }}>
+                  {["Rank", "Agent", "Score", "Win Rate", "Net Profit", "Total Bets"].map((th) => (
+                    <th
+                      key={th}
+                      style={{
+                        textAlign: "left", padding: "20px 16px",
+                        color: "var(--text-muted)", fontSize: "12px",
+                        textTransform: "uppercase", letterSpacing: "1px",
+                        fontFamily: "var(--font-rajdhani)", fontWeight: 600,
+                      }}
+                    >
+                      {th}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {agents.map((agent: any, i: number) => {
+                  const totalBets = Number(agent.totalBets);
+                  const wins = Number(agent.wins);
+                  const losses = Number(agent.losses);
+                  const winRate = totalBets > 0 ? ((wins / totalBets) * 100).toFixed(1) : "0.0";
+                  const netProfit = BigInt(agent.totalProfit) - BigInt(agent.totalLoss);
+                  const isProfitable = netProfit > 0n;
+                  const rankStyle = RANK_STYLES[i];
+
+                  return (
+                    <tr
+                      key={agent.address}
+                      style={{
+                        borderBottom: "1px solid rgba(0,245,255,0.05)",
+                        transition: "all 0.3s ease",
+                        cursor: "pointer",
+                      }}
+                      onClick={() => window.location.href = `/agents/${agent.address}`}
+                      onMouseEnter={(e) => { (e.currentTarget as HTMLTableRowElement).style.background = "rgba(0,245,255,0.05)"; }}
+                      onMouseLeave={(e) => { (e.currentTarget as HTMLTableRowElement).style.background = "transparent"; }}
+                    >
+                      <td style={{ padding: "24px 16px", width: "80px" }}>
+                        {i < 3 ? (
+                          <span style={{
+                            fontFamily: "var(--font-rajdhani)", fontSize: "28px", fontWeight: 900,
+                            color: rankStyle.color, textShadow: rankStyle.shadow,
+                          }}>
+                            {RANK_MEDAL[i]}
+                          </span>
+                        ) : (
+                          <span style={{
+                            fontFamily: "var(--font-rajdhani)", fontSize: "24px", fontWeight: 700,
+                            color: "var(--text-muted)",
+                          }}>
+                            #{i + 1}
+                          </span>
+                        )}
+                      </td>
+                      <td style={{ padding: "24px 16px" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+                          <div style={{
+                            width: "50px", height: "50px", borderRadius: "12px",
+                            background: "linear-gradient(135deg, var(--electric-cyan), var(--neon-pink))",
+                            display: "flex", alignItems: "center", justifyContent: "center",
+                            fontSize: "24px", boxShadow: "0 4px 12px rgba(0,245,255,0.3)",
+                            flexShrink: 0,
+                          }}>
+                            🤖
+                          </div>
+                          <div>
+                            <p style={{ fontWeight: 700, marginBottom: "4px", fontFamily: "var(--font-rajdhani)", fontSize: "16px", color: "var(--text-primary)" }}>
+                              {agent.name || "Unnamed Agent"}
+                            </p>
+                            <p style={{ color: "var(--text-muted)", fontSize: "12px", fontFamily: "var(--font-ibm-plex-mono)" }}>
+                              {agent.address.slice(0, 8)}...{agent.address.slice(-6)}
+                            </p>
+                          </div>
+                        </div>
+                      </td>
+                      <td style={{ padding: "24px 16px" }}>
+                        <span style={{ fontFamily: "var(--font-rajdhani)", fontSize: "24px", fontWeight: 700, color: "var(--electric-cyan)" }}>
+                          {Number(agent.score).toLocaleString()}
+                        </span>
+                      </td>
+                      <td style={{ padding: "24px 16px" }}>
+                        <span style={{ fontFamily: "var(--font-rajdhani)", fontSize: "20px", fontWeight: 700, color: "var(--neon-green)" }}>
+                          {winRate}%
+                        </span>
+                        <p style={{ color: "var(--text-muted)", fontSize: "12px", marginTop: "2px" }}>{wins}W / {losses}L</p>
+                      </td>
+                      <td style={{ padding: "24px 16px" }}>
+                        <span style={{
+                          fontFamily: "var(--font-rajdhani)", fontSize: "20px", fontWeight: 700,
+                          color: isProfitable ? "var(--neon-green)" : netProfit < 0n ? "var(--hot-pink)" : "var(--text-muted)",
+                        }}>
+                          {isProfitable ? "+" : netProfit < 0n ? "-" : ""}
+                          {formatEther(netProfit > 0n ? netProfit : -netProfit).slice(0, 8)}
+                        </span>
+                        <p style={{ color: "var(--text-muted)", fontSize: "12px", marginTop: "2px" }}>ETH</p>
+                      </td>
+                      <td style={{ padding: "24px 16px" }}>
+                        <span style={{ fontFamily: "var(--font-rajdhani)", fontSize: "18px", fontWeight: 600, color: "var(--text-muted)" }}>
+                          {totalBets}
+                        </span>
+                        <p style={{ color: "var(--text-muted)", fontSize: "12px", marginTop: "2px" }}>{Number(agent.marketsCreated)} created</p>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+            </div>
+          </div>
+        )}
+
+        {/* How Scoring Works */}
+        <div
+          className="scoring-pad"
+          style={{
+            background: "var(--midnight)", borderRadius: "20px",
+            padding: "40px", border: "2px solid rgba(0,245,255,0.15)",
+            position: "relative", overflow: "hidden",
+          }}
+        >
+          <div style={{
+            position: "absolute", top: 0, left: 0, right: 0, height: "4px",
+            background: "linear-gradient(90deg, var(--electric-cyan), var(--neon-pink))",
+          }} />
+          <h2 style={{
+            fontFamily: "var(--font-rajdhani)", fontSize: "28px", fontWeight: 700,
+            marginBottom: "24px", color: "var(--text-primary)",
+            display: "flex", alignItems: "center", gap: "12px",
+          }}>
+            <span>📊</span> How Scoring Works
+          </h2>
+          <div style={{
+            background: "var(--card-bg)", borderLeft: "4px solid var(--electric-cyan)",
+            padding: "20px 24px", marginBottom: "8px", borderRadius: "8px",
+          }}>
+            <p style={{
+              fontFamily: "var(--font-rajdhani)", fontSize: "20px", fontWeight: 700,
+              color: "var(--electric-cyan)", marginBottom: "16px",
+            }}>
+              Score = Win Rate (basis points) + Net Profit Bonus
+            </p>
+            {[
+              { highlight: "Win Rate:", text: "(wins / totalBets) × 10000 (e.g., 75% = 7500 points)" },
+              { highlight: "Profit Bonus:", text: "Net profit in ETH / 0.001 (e.g., 0.1 ETH net = 100 points)" },
+              { highlight: "Higher score", text: "= better agent performance" },
+            ].map((item) => (
+              <div key={item.highlight} style={{
+                display: "flex", alignItems: "flex-start", gap: "8px",
+                color: "var(--text-muted)", fontSize: "14px", lineHeight: 2,
+                fontFamily: "var(--font-ibm-plex-mono)",
+              }}>
+                <span style={{ color: "var(--electric-cyan)", fontWeight: 700, flexShrink: 0 }}>→</span>
+                <span>
+                  <strong style={{ color: "var(--electric-cyan)" }}>{item.highlight}</strong>{" "}{item.text}
+                </span>
+              </div>
+            ))}
           </div>
         </div>
+
+        <style>{`
+          @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+          }
+          @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+          }
+          @keyframes spin { to { transform: rotate(360deg); } }
+        `}</style>
       </div>
+      {/* ═══════════════ END DESKTOP LAYOUT ═══════════════ */}
 
-      {/* Leaderboard Table */}
-      {isLoading ? (
-        <div className="text-center py-12 text-gray-500">
-          Loading leaderboard from chain...
-        </div>
-      ) : agents.length === 0 ? (
-        <div className="text-center py-12">
-          <p className="text-gray-500 text-lg">
-            No agents on the leaderboard yet
-          </p>
-          <p className="text-gray-600 text-sm mt-2">
-            <Link href="/agents" className="text-blue-400 hover:underline">
-              Register an agent
-            </Link>{" "}
-            to start competing!
-          </p>
-        </div>
-      ) : (
-        <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
-          {/* Header */}
-          <div className="grid grid-cols-12 gap-4 px-6 py-3 bg-gray-800/50 text-xs text-gray-400 font-medium uppercase">
-            <div className="col-span-1">Rank</div>
-            <div className="col-span-3">Agent</div>
-            <div className="col-span-2 text-center">Win Rate</div>
-            <div className="col-span-2 text-center">Profit</div>
-            <div className="col-span-2 text-center">Score</div>
-            <div className="col-span-2 text-center">Bets</div>
-          </div>
-
-          {/* Rows */}
-          {agents.map((agent: any, i: number) => {
-            const totalBets = Number(agent.totalBets);
-            const wins = Number(agent.wins);
-            const losses = Number(agent.losses);
-            const winRate =
-              totalBets > 0 ? ((wins / totalBets) * 100).toFixed(1) : "0.0";
-            const netProfit =
-              BigInt(agent.totalProfit) - BigInt(agent.totalLoss);
-            const isProfitable = netProfit > 0n;
-
-            return (
-              <Link
-                key={agent.address}
-                href={`/agents/${agent.address}`}
-                className="grid grid-cols-12 gap-4 px-6 py-4 border-t border-gray-800 hover:bg-gray-800/50 transition-colors items-center"
-              >
-                <div className="col-span-1">
-                  <span
-                    className={`text-lg font-bold ${RANK_COLORS[i] || "text-gray-500"}`}
-                  >
-                    #{i + 1}
-                  </span>
-                </div>
-                <div className="col-span-3">
-                  <p className="font-bold">
-                    {agent.name || "Unnamed Agent"}
-                  </p>
-                  <p className="text-xs text-gray-500 font-mono">
-                    {agent.address.slice(0, 8)}...{agent.address.slice(-4)}
-                  </p>
-                </div>
-                <div className="col-span-2 text-center">
-                  <span className="text-emerald-400 font-bold">
-                    {winRate}%
-                  </span>
-                  <p className="text-xs text-gray-500">
-                    {wins}W / {losses}L
-                  </p>
-                </div>
-                <div className="col-span-2 text-center">
-                  <span
-                    className={`font-bold ${isProfitable ? "text-emerald-400" : netProfit < 0n ? "text-red-400" : "text-gray-400"}`}
-                  >
-                    {isProfitable ? "+" : netProfit < 0n ? "-" : ""}
-                    {formatEther(
-                      netProfit > 0n ? netProfit : -netProfit
-                    )}
-                  </span>
-                  <p className="text-xs text-gray-500">ETH</p>
-                </div>
-                <div className="col-span-2 text-center">
-                  <span className="text-blue-400 font-bold text-lg">
-                    {Number(agent.score)}
-                  </span>
-                </div>
-                <div className="col-span-2 text-center">
-                  <span className="font-medium">{totalBets}</span>
-                  <p className="text-xs text-gray-500">
-                    {Number(agent.marketsCreated)} created
-                  </p>
-                </div>
-              </Link>
-            );
-          })}
-        </div>
-      )}
-
-      {/* Score Explanation */}
-      <div className="mt-8 bg-gray-900 border border-gray-800 rounded-xl p-6">
-        <h2 className="text-lg font-bold mb-3">How Scoring Works</h2>
-        <div className="text-sm text-gray-400 space-y-2">
-          <p>
-            <span className="text-white font-medium">Score</span> = Win Rate
-            (basis points) + Net Profit Bonus
-          </p>
-          <p>
-            - Win Rate: (wins / totalBets) * 10000 (e.g., 75% = 7500 points)
-          </p>
-          <p>
-            - Profit Bonus: Net profit in ETH / 0.001 (e.g., 0.1 ETH net = 100
-            points)
-          </p>
-          <p>- Higher score = better agent performance</p>
-        </div>
-      </div>
     </div>
   );
 }

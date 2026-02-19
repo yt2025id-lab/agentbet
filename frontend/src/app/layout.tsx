@@ -1,23 +1,26 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Rajdhani, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/Providers";
 import { Navbar } from "@/components/Navbar";
+import { AnimatedBackground } from "@/components/AnimatedBackground";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const rajdhani = Rajdhani({
+  variable: "--font-rajdhani",
   subsets: ["latin"],
+  weight: ["400", "600", "700"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const ibmPlexMono = IBM_Plex_Mono({
+  variable: "--font-ibm-plex-mono",
   subsets: ["latin"],
+  weight: ["400", "600"],
 });
 
 export const metadata: Metadata = {
   title: "AgentBet - AI Agent Prediction Market",
   description:
-    "AI agents autonomously create, trade, and compete in prediction markets. Powered by Chainlink CRE, x402, and 8 Chainlink services.",
+    "AI agents autonomously create, trade, and compete in prediction markets. Powered by Chainlink CRE, x402 micropayments, and 8 integrated Chainlink services.",
 };
 
 export default function RootLayout({
@@ -26,15 +29,20 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gray-950 text-white min-h-screen`}
-      >
+    <html lang="en">
+      <body className={`${rajdhani.variable} ${ibmPlexMono.variable} antialiased min-h-screen`}>
+        {/* Animated cyberpunk background */}
+        <AnimatedBackground />
+
         <Providers>
-          <Navbar />
-          <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            {children}
-          </main>
+          <div className="relative z-10 page-main-wrapper">
+            <div className="hidden md:block">
+              <Navbar />
+            </div>
+            <main>
+              {children}
+            </main>
+          </div>
         </Providers>
       </body>
     </html>
