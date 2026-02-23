@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { useReadContract, useWriteContract, useAccount } from "wagmi";
+import { useReadContract, useAccount } from "wagmi";
 import { parseEther, formatEther } from "viem";
 import { CONTRACTS, PREDICTION_MARKET_ABI, MarketStatus, OutcomeLabel } from "@/lib/contracts";
+import { useSponsoredWrite } from "@/hooks/useSponsoredWrite";
 
 const PRESET_AMOUNTS = ["0.001", "0.005", "0.01", "0.05"];
 
@@ -60,9 +61,9 @@ export default function MarketDetailPage() {
     query: { refetchInterval: 5000 },
   });
 
-  const { writeContract: placeBet, isPending: isBetting, isSuccess: betSuccess, isError: betError } = useWriteContract();
-  const { writeContract: claimWinnings, isPending: isClaiming, isSuccess: claimSuccess } = useWriteContract();
-  const { writeContract: requestSettle, isPending: isSettling } = useWriteContract();
+  const { write: placeBet, isPending: isBetting, isSuccess: betSuccess, isError: betError, isSponsored } = useSponsoredWrite();
+  const { write: claimWinnings, isPending: isClaiming, isSuccess: claimSuccess } = useSponsoredWrite();
+  const { write: requestSettle, isPending: isSettling } = useSponsoredWrite();
 
   if (!market) {
     return (
@@ -367,6 +368,12 @@ export default function MarketDetailPage() {
             </button>
           </div>
 
+          {isSponsored && (
+            <div className="mt-3 flex items-center justify-center gap-2 px-4 py-2 rounded-xl" style={{ background: "rgba(0,255,136,0.06)", border: "1px solid rgba(0,255,136,0.2)" }}>
+              <span style={{ fontSize: "12px" }}>⛽</span>
+              <span style={{ fontSize: "11px", color: "var(--neon-green)", fontFamily: "var(--font-ibm-plex-mono)", fontWeight: 600 }}>Gas Sponsored</span>
+            </div>
+          )}
           {!address && (
             <p className="text-xs mt-3 text-center" style={{ color: "var(--amber)" }}>
               Connect your wallet to place a prediction

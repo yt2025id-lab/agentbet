@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useAccount, useWriteContract, useReadContract } from "wagmi";
+import { useAccount, useReadContract } from "wagmi";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import {
   parseEther,
@@ -12,6 +12,7 @@ import {
 } from "viem";
 import { CONTRACTS, AGENT_IDENTITY_ABI, AGENT_REGISTRY_ABI } from "@/lib/contracts";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
+import { useSponsoredWrite } from "@/hooks/useSponsoredWrite";
 
 const inputStyle = {
   width: "100%",
@@ -49,7 +50,7 @@ export default function AgentsPage() {
   const [agentStrategy, setAgentStrategy] = useState("");
   const [stakeAmount, setStakeAmount] = useState("0.01");
 
-  const { writeContract, isPending, isSuccess: registerSuccess, isError: registerError } = useWriteContract();
+  const { write: writeContract, isPending, isSuccess: registerSuccess, isError: registerError, isSponsored } = useSponsoredWrite();
 
   const { data: count } = useReadContract({
     address: CONTRACTS.agentRegistry,
@@ -322,6 +323,12 @@ export default function AgentsPage() {
                   >
                     {isPending ? "Minting..." : `Deploy Agent · ${stakeAmount} ETH`}
                   </button>
+                  {isSponsored && (
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px", justifyContent: "center", padding: "8px", borderRadius: "8px", background: "rgba(0,255,136,0.06)", border: "1px solid rgba(0,255,136,0.2)" }}>
+                      <span style={{ fontSize: "12px" }}>⛽</span>
+                      <span style={{ fontSize: "11px", color: "var(--neon-green)", fontFamily: "var(--font-ibm-plex-mono)", fontWeight: 600 }}>Gas Sponsored</span>
+                    </div>
+                  )}
 
                   {!address && (
                     <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "10px 14px", borderRadius: "10px", background: "rgba(255,184,0,0.08)", border: "1px solid rgba(255,184,0,0.3)" }}>
@@ -363,27 +370,6 @@ export default function AgentsPage() {
           {/* Agent Cards List */}
           {!isLoading && agents.length > 0 && (
             <>
-              {/* Filter chips */}
-              <div style={{
-                display: "flex", gap: "8px", marginBottom: "20px",
-                overflowX: "auto", WebkitOverflowScrolling: "touch",
-                scrollbarWidth: "none", paddingBottom: "4px",
-              }} className="hide-scrollbar">
-                {["All", "Active", "Inactive"].map((f, idx) => (
-                  <button key={f} style={{
-                    background: idx === 0 ? "var(--electric-cyan)" : "var(--card-bg)",
-                    border: `2px solid ${idx === 0 ? "var(--electric-cyan)" : "rgba(0,245,255,0.2)"}`,
-                    padding: "8px 16px", borderRadius: "10px",
-                    color: idx === 0 ? "var(--deep-space)" : "var(--text-muted)",
-                    fontWeight: 600, fontSize: "12px", cursor: "pointer",
-                    whiteSpace: "nowrap", flexShrink: 0,
-                    fontFamily: "var(--font-rajdhani)",
-                  }}>
-                    {f}
-                  </button>
-                ))}
-              </div>
-
               <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
                 {agents.map((agent: any) => {
                   const totalBets = Number(agent.totalBets);
@@ -453,25 +439,15 @@ export default function AgentsPage() {
                           </div>
                         </div>
 
-                        {/* Action buttons */}
-                        <div style={{ display: "flex", gap: "8px" }}>
-                          <div style={{
-                            flex: 1, padding: "10px", borderRadius: "8px",
-                            border: "2px solid var(--electric-cyan)",
-                            background: "rgba(0,245,255,0.1)",
-                            color: "var(--electric-cyan)",
-                            fontWeight: 600, fontSize: "12px", textAlign: "center",
-                            fontFamily: "var(--font-rajdhani)",
-                          }}>View Details</div>
-                          <div style={{
-                            flex: 1, padding: "10px", borderRadius: "8px",
-                            border: "2px solid var(--text-muted)",
-                            background: "transparent",
-                            color: "var(--text-muted)",
-                            fontWeight: 600, fontSize: "12px", textAlign: "center",
-                            fontFamily: "var(--font-rajdhani)",
-                          }}>Manage</div>
-                        </div>
+                        {/* Action button */}
+                        <div style={{
+                          padding: "10px", borderRadius: "8px",
+                          border: "2px solid var(--electric-cyan)",
+                          background: "rgba(0,245,255,0.1)",
+                          color: "var(--electric-cyan)",
+                          fontWeight: 600, fontSize: "12px", textAlign: "center",
+                          fontFamily: "var(--font-rajdhani)",
+                        }}>View Details</div>
                       </div>
                     </Link>
                   );
@@ -898,6 +874,12 @@ export default function AgentsPage() {
                   >
                     {isPending ? "Minting Agent NFT..." : `🚀 Deploy Agent · Stake ${stakeAmount} ETH`}
                   </button>
+                  {isSponsored && (
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px", justifyContent: "center", padding: "10px 16px", borderRadius: "10px", background: "rgba(0,255,136,0.06)", border: "1px solid rgba(0,255,136,0.2)" }}>
+                      <span style={{ fontSize: "14px" }}>⛽</span>
+                      <span style={{ fontSize: "13px", color: "var(--neon-green)", fontFamily: "var(--font-ibm-plex-mono)", fontWeight: 600 }}>Gas Sponsored</span>
+                    </div>
+                  )}
 
                   {!address && (
                     <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "12px 16px", borderRadius: "10px", background: "rgba(255,184,0,0.08)", border: "1px solid rgba(255,184,0,0.3)" }}>
