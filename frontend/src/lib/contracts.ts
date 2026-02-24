@@ -4,15 +4,15 @@ import { baseSepolia } from "viem/chains";
 // Contract addresses - update after deployment
 export const CONTRACTS = {
   predictionMarket: (process.env.NEXT_PUBLIC_PREDICTION_MARKET_ADDRESS ||
-    "0xB635CBEb6C1aB83adF72ff6bEc5f8423c7E2ced4") as Address,
+    "0x07d85a17c65b2c5ef702bfD61bc501bb2537f287") as Address,
   agentRegistry: (process.env.NEXT_PUBLIC_AGENT_REGISTRY_ADDRESS ||
-    "0x9e820a4a2451B88aD10c4a43E77748d0465CbAac") as Address,
+    "0x31f44fE2D53074a7D6Aee9078B201cdf93398aF3") as Address,
   agentIdentity: (process.env.NEXT_PUBLIC_AGENT_IDENTITY_ADDRESS ||
-    "0xA8bc3d9842FBAB05372FF262dFcd04628C64c7D3") as Address,
+    "0x7b2aeD0cDb291268f3C006a6E9F202d288C46A85") as Address,
   agentReputation: (process.env.NEXT_PUBLIC_AGENT_REPUTATION_ADDRESS ||
-    "0xe8bB69D476Bcf66e8d039C24E447e2Cc6Dc38Cb4") as Address,
+    "0xB3Bf0F06B900D88A6d0BC0e6ADDE13c387eECfCE") as Address,
   rewardDistributor: (process.env.NEXT_PUBLIC_REWARD_DISTRIBUTOR_ADDRESS ||
-    "0x2fBeE7C3960486004b7c53A248B0A43bA064F12c") as Address,
+    "0xad507DE51cfC6b37E277074fF80f2a23Dc8440c1") as Address,
 };
 
 export const API_URL =

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { usePathname } from "next/navigation";
 
@@ -37,7 +38,7 @@ export function Navbar() {
       {/* Logo + live indicator */}
       <div style={{ display: "flex", alignItems: "center", gap: "24px" }}>
         <Link href="/" style={{ display: "flex", alignItems: "center", gap: "10px", textDecoration: "none" }}>
-          <span style={{ fontSize: "28px" }} className="animate-float">🦉</span>
+          <Image src="/logo.png" alt="AgentBet Logo" width={36} height={36} style={{ objectFit: "contain" }} />
           <span
             style={{
               fontFamily: "var(--font-rajdhani)",

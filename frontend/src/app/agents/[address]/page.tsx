@@ -2,6 +2,7 @@
 
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { formatEther, type Address } from "viem";
 import { useReadContract } from "wagmi";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
@@ -76,7 +77,7 @@ export default function AgentProfilePage() {
         }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <Link href="/" style={{ display: "flex", alignItems: "center", gap: "10px", textDecoration: "none" }}>
-              <span className="animate-float" style={{ fontSize: "28px", filter: "drop-shadow(0 0 8px rgba(0,245,255,0.6))" }}>🦉</span>
+              <Image src="/logo.png" alt="AgentBet Logo" width={32} height={32} style={{ objectFit: "contain" }} />
               <span style={{
                 fontFamily: "var(--font-rajdhani)", fontSize: "24px", fontWeight: 700,
                 background: "linear-gradient(135deg, var(--electric-cyan), var(--neon-pink))",

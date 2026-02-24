@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useAccount, useReadContract } from "wagmi";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import {
@@ -109,7 +110,7 @@ export default function AgentsPage() {
         }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <Link href="/" style={{ display: "flex", alignItems: "center", gap: "10px", textDecoration: "none" }}>
-              <span className="animate-float" style={{ fontSize: "28px", filter: "drop-shadow(0 0 8px rgba(0,245,255,0.6))" }}>🦉</span>
+              <Image src="/logo.png" alt="AgentBet Logo" width={32} height={32} style={{ objectFit: "contain" }} />
               <span style={{
                 fontFamily: "var(--font-rajdhani)", fontSize: "24px", fontWeight: 700,
                 background: "linear-gradient(135deg, var(--electric-cyan), var(--neon-pink))",
@@ -195,7 +196,9 @@ export default function AgentsPage() {
               <div style={{ padding: "24px 20px" }}>
                 {/* Mobile branding */}
                 <div style={{ textAlign: "center", marginBottom: "24px" }}>
-                  <div style={{ fontSize: "48px", marginBottom: "12px" }}>🦉</div>
+                  <div style={{ marginBottom: "12px", display: "flex", justifyContent: "center" }}>
+                    <Image src="/logo.png" alt="AgentBet Logo" width={48} height={48} style={{ objectFit: "contain" }} />
+                  </div>
                   <h2 style={{
                     fontFamily: "var(--font-rajdhani)", fontSize: "20px", fontWeight: 700,
                     background: "linear-gradient(135deg, var(--electric-cyan), var(--neon-pink))",
@@ -473,9 +476,11 @@ export default function AgentsPage() {
                 }} />
 
                 <div className="animate-float" style={{
-                  fontSize: "80px", marginBottom: "20px", position: "relative", zIndex: 1,
-                  filter: "drop-shadow(0 0 20px rgba(0,245,255,0.5))", lineHeight: 1,
-                }}>🦉</div>
+                  marginBottom: "20px", position: "relative", zIndex: 1,
+                  filter: "drop-shadow(0 0 20px rgba(0,245,255,0.5))", display: "flex", justifyContent: "center",
+                }}>
+                  <Image src="/logo.png" alt="AgentBet Logo" width={80} height={80} style={{ objectFit: "contain" }} />
+                </div>
 
                 <h2 style={{
                   fontFamily: "var(--font-rajdhani)", fontSize: "24px", fontWeight: 700,
@@ -692,11 +697,10 @@ export default function AgentsPage() {
                 gap: "20px",
               }}>
                 <div style={{
-                  fontSize: "96px", lineHeight: 1,
                   animation: "float 3s ease-in-out infinite",
                   filter: "drop-shadow(0 0 24px rgba(0,245,255,0.5))",
                 }}>
-                  🦉
+                  <Image src="/logo.png" alt="AgentBet Logo" width={96} height={96} style={{ objectFit: "contain" }} />
                 </div>
                 <div>
                   <h2 style={{
@@ -1058,11 +1062,12 @@ export default function AgentsPage() {
             }} />
 
             <div style={{
-              fontSize: "140px", marginBottom: "30px", position: "relative", zIndex: 1,
+              marginBottom: "30px", position: "relative", zIndex: 1,
               animation: "float 3s ease-in-out infinite",
-              filter: "drop-shadow(0 0 30px rgba(0, 245, 255, 0.6))", lineHeight: 1,
+              filter: "drop-shadow(0 0 30px rgba(0, 245, 255, 0.6))",
+              display: "flex", justifyContent: "center",
             }}>
-              🦉
+              <Image src="/logo.png" alt="AgentBet Logo" width={140} height={140} style={{ objectFit: "contain" }} />
             </div>
 
             <h2 style={{

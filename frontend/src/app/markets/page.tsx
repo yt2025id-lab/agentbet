@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { formatEther } from "viem";
 import { useReadContract, useReadContracts } from "wagmi";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
@@ -131,7 +132,7 @@ export default function MarketsPage() {
         }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <Link href="/" style={{ display: "flex", alignItems: "center", gap: "10px", textDecoration: "none" }}>
-              <span className="animate-float" style={{ fontSize: "28px", filter: "drop-shadow(0 0 8px rgba(0,245,255,0.6))" }}>🦉</span>
+              <Image src="/logo.png" alt="AgentBet Logo" width={32} height={32} style={{ objectFit: "contain" }} />
               <span style={{
                 fontFamily: "var(--font-rajdhani)", fontSize: "24px", fontWeight: 700,
                 background: "linear-gradient(135deg, var(--electric-cyan), var(--neon-pink))",
@@ -427,9 +428,11 @@ export default function MarketsPage() {
               }} />
 
               <div className="animate-float" style={{
-                fontSize: "80px", marginBottom: "20px", position: "relative", zIndex: 1,
-                filter: "drop-shadow(0 0 20px rgba(0,245,255,0.5))", lineHeight: 1,
-              }}>🦉</div>
+                marginBottom: "20px", position: "relative", zIndex: 1,
+                filter: "drop-shadow(0 0 20px rgba(0,245,255,0.5))", display: "flex", justifyContent: "center",
+              }}>
+                <Image src="/logo.png" alt="AgentBet Logo" width={80} height={80} style={{ objectFit: "contain" }} />
+              </div>
 
               <h2 style={{
                 fontFamily: "var(--font-rajdhani)", fontSize: "24px", fontWeight: 700,
@@ -899,16 +902,16 @@ export default function MarketsPage() {
 
             <div
               style={{
-                fontSize: "120px",
                 marginBottom: "24px",
                 position: "relative",
                 zIndex: 1,
                 animation: "float 3s ease-in-out infinite",
                 filter: "drop-shadow(0 0 20px rgba(0, 245, 255, 0.5))",
-                lineHeight: 1,
+                display: "flex",
+                justifyContent: "center",
               }}
             >
-              🦉
+              <Image src="/logo.png" alt="AgentBet Logo" width={120} height={120} style={{ objectFit: "contain" }} />
             </div>
 
             <h2

@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useReadContract, useReadContracts } from "wagmi";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { formatEther } from "viem";
@@ -189,7 +190,7 @@ export default function Dashboard() {
           {/* Logo row + connect button */}
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
             <Link href="/" style={{ display: "flex", alignItems: "center", gap: "8px", textDecoration: "none" }}>
-              <span className="animate-float" style={{ fontSize: "24px" }}>🦉</span>
+              <Image src="/logo.png" alt="AgentBet Logo" width={28} height={28} style={{ objectFit: "contain" }} />
               <span style={{
                 fontFamily: "var(--font-rajdhani)", fontSize: "20px", fontWeight: 700,
                 background: "linear-gradient(135deg, var(--electric-cyan), var(--neon-pink))",
@@ -247,7 +248,7 @@ export default function Dashboard() {
               animation: "rotate 15s linear infinite", pointerEvents: "none",
             }} />
             <div style={{ position: "relative", zIndex: 1 }}>
-              <p style={{ fontSize: "13px", color: "var(--text-muted)", marginBottom: "6px", fontFamily: "var(--font-ibm-plex-mono)" }}>Welcome back! 🦉</p>
+              <p style={{ fontSize: "13px", color: "var(--text-muted)", marginBottom: "6px", fontFamily: "var(--font-ibm-plex-mono)" }}>Welcome back!</p>
               <h1 style={{
                 fontFamily: "var(--font-rajdhani)", fontSize: "30px", fontWeight: 700,
                 background: "linear-gradient(135deg, var(--electric-cyan), var(--neon-pink))",
@@ -450,7 +451,9 @@ export default function Dashboard() {
 
         {/* Hero */}
         <div className="text-center" style={{ paddingTop: "48px", paddingBottom: "80px" }}>
-          <div className="animate-float" style={{ fontSize: "80px", marginBottom: "16px", filter: "drop-shadow(0 0 24px rgba(0,245,255,0.6))" }}>🦉</div>
+          <div className="animate-float" style={{ marginBottom: "16px", filter: "drop-shadow(0 0 24px rgba(0,245,255,0.6))", display: "flex", justifyContent: "center" }}>
+            <Image src="/logo.png" alt="AgentBet Logo" width={80} height={80} style={{ objectFit: "contain" }} />
+          </div>
           <h1 style={{
             fontFamily: "var(--font-rajdhani), Rajdhani, sans-serif",
             fontSize: "clamp(36px, 6vw, 72px)", fontWeight: 700,
