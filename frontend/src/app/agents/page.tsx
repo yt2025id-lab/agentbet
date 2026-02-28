@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useAccount, useReadContract } from "wagmi";
-import { ConnectButton } from "@rainbow-me/rainbowkit";
+import { MobileHeader } from "@/components/MobileHeader";
 import {
   parseEther,
   formatEther,
@@ -101,48 +101,7 @@ export default function AgentsPage() {
       <div className="mobile-only" style={{ paddingBottom: "80px" }}>
 
         {/* ── Sticky Mobile Navbar ── */}
-        <nav style={{
-          position: "sticky", top: 0, zIndex: 100,
-          background: "rgba(26,26,46,0.95)",
-          backdropFilter: "blur(20px)",
-          borderBottom: "1px solid rgba(0,245,255,0.2)",
-          padding: "16px 20px",
-        }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <Link href="/" style={{ display: "flex", alignItems: "center", gap: "10px", textDecoration: "none" }}>
-              <Image src="/logo.png" alt="AgentBet Logo" width={32} height={32} style={{ objectFit: "contain" }} />
-              <span style={{
-                fontFamily: "var(--font-rajdhani)", fontSize: "24px", fontWeight: 700,
-                background: "linear-gradient(135deg, var(--electric-cyan), var(--neon-pink))",
-                WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text",
-                letterSpacing: "1px",
-              }}>AGENTBET</span>
-            </Link>
-            <ConnectButton.Custom>
-              {({ account, chain, openAccountModal, openConnectModal, mounted }) => {
-                const connected = mounted && account && chain;
-                if (!connected) return (
-                  <button onClick={openConnectModal} style={{
-                    background: "linear-gradient(135deg, var(--electric-cyan), var(--neon-pink))",
-                    border: "none", padding: "10px 20px", borderRadius: "10px",
-                    color: "var(--deep-space)", fontFamily: "var(--font-rajdhani)",
-                    fontWeight: 700, fontSize: "14px", cursor: "pointer",
-                    boxShadow: "0 0 20px rgba(0,245,255,0.5)", whiteSpace: "nowrap",
-                  }}>Connect Wallet</button>
-                );
-                return (
-                  <button onClick={openAccountModal} style={{
-                    background: "linear-gradient(135deg, var(--electric-cyan), var(--neon-pink))",
-                    border: "none", padding: "10px 20px", borderRadius: "10px",
-                    color: "var(--deep-space)", fontFamily: "var(--font-rajdhani)",
-                    fontWeight: 700, fontSize: "14px", cursor: "pointer",
-                    boxShadow: "0 0 20px rgba(0,245,255,0.5)", whiteSpace: "nowrap",
-                  }}>{account.displayName}</button>
-                );
-              }}
-            </ConnectButton.Custom>
-          </div>
-        </nav>
+        <MobileHeader />
 
         {/* ── Page Header (separate from navbar) ── */}
         <header style={{ padding: "24px 20px 20px", position: "relative", zIndex: 1 }}>
@@ -287,11 +246,12 @@ export default function AgentsPage() {
                             setStakeAmount(parseFloat(val.toFixed(4)).toString());
                           }}
                           style={{
-                            flex: 1, border: "none", borderRadius: "0 8px 0 0",
-                            background: "rgba(0,245,255,0.08)", color: "var(--electric-cyan)",
+                            flex: 1, borderRadius: "0 8px 0 0",
+                            border: "none", borderLeft: "1px solid rgba(0,245,255,0.2)",
+                            borderBottom: "1px solid rgba(0,245,255,0.2)",
+                            background: "var(--card-bg)", color: "var(--electric-cyan)",
                             fontSize: "14px", fontWeight: 700, cursor: "pointer",
                             display: "flex", alignItems: "center", justifyContent: "center",
-                            borderBottom: "1px solid rgba(0,245,255,0.15)",
                           }}
                         >▲</button>
                         <button
@@ -301,8 +261,9 @@ export default function AgentsPage() {
                             setStakeAmount(parseFloat(val.toFixed(4)).toString());
                           }}
                           style={{
-                            flex: 1, border: "none", borderRadius: "0 0 8px 0",
-                            background: "rgba(0,245,255,0.08)", color: "var(--electric-cyan)",
+                            flex: 1, borderRadius: "0 0 8px 0",
+                            border: "none", borderLeft: "1px solid rgba(0,245,255,0.2)",
+                            background: "var(--card-bg)", color: "var(--electric-cyan)",
                             fontSize: "14px", fontWeight: 700, cursor: "pointer",
                             display: "flex", alignItems: "center", justifyContent: "center",
                           }}
@@ -821,15 +782,16 @@ export default function AgentsPage() {
                             setStakeAmount(parseFloat(val.toFixed(4)).toString());
                           }}
                           style={{
-                            flex: 1, border: "none", borderRadius: "0 8px 0 0",
-                            background: "rgba(0,245,255,0.08)", color: "var(--electric-cyan)",
+                            flex: 1, borderRadius: "0 8px 0 0",
+                            border: "none", borderLeft: "1px solid rgba(0,245,255,0.2)",
+                            borderBottom: "1px solid rgba(0,245,255,0.2)",
+                            background: "var(--card-bg)", color: "var(--electric-cyan)",
                             fontSize: "14px", fontWeight: 700, cursor: "pointer",
                             display: "flex", alignItems: "center", justifyContent: "center",
-                            borderBottom: "1px solid rgba(0,245,255,0.15)",
                             transition: "all 0.2s",
                           }}
-                          onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(0,245,255,0.18)"; }}
-                          onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(0,245,255,0.08)"; }}
+                          onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(0,245,255,0.12)"; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.background = "var(--card-bg)"; }}
                         >▲</button>
                         <button
                           type="button"
@@ -838,14 +800,15 @@ export default function AgentsPage() {
                             setStakeAmount(parseFloat(val.toFixed(4)).toString());
                           }}
                           style={{
-                            flex: 1, border: "none", borderRadius: "0 0 8px 0",
-                            background: "rgba(0,245,255,0.08)", color: "var(--electric-cyan)",
+                            flex: 1, borderRadius: "0 0 8px 0",
+                            border: "none", borderLeft: "1px solid rgba(0,245,255,0.2)",
+                            background: "var(--card-bg)", color: "var(--electric-cyan)",
                             fontSize: "14px", fontWeight: 700, cursor: "pointer",
                             display: "flex", alignItems: "center", justifyContent: "center",
                             transition: "all 0.2s",
                           }}
-                          onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(0,245,255,0.18)"; }}
-                          onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(0,245,255,0.08)"; }}
+                          onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(0,245,255,0.12)"; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.background = "var(--card-bg)"; }}
                         >▼</button>
                       </div>
                     </div>

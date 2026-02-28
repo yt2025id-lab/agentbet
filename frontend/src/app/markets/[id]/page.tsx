@@ -5,8 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useReadContract, useAccount } from "wagmi";
 import { parseEther, formatEther } from "viem";
 import Link from "next/link";
-import Image from "next/image";
-import { ConnectButton } from "@rainbow-me/rainbowkit";
+import { MobileHeader } from "@/components/MobileHeader";
 import { CONTRACTS, PREDICTION_MARKET_ABI, MarketStatus, OutcomeLabel } from "@/lib/contracts";
 import { useSponsoredWrite } from "@/hooks/useSponsoredWrite";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
@@ -169,28 +168,70 @@ export default function MarketDetailPage() {
           <div style={{ fontSize: "10px", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "8px", fontFamily: "var(--font-ibm-plex-mono)" }}>
             Custom amount (ETH)
           </div>
-          <input
-            type="number"
-            step="0.001"
-            min="0.001"
-            value={betAmount}
-            onChange={(e) => setBetAmount(e.target.value)}
-            style={{
-              width: "100%", padding: "12px 16px", borderRadius: "12px",
-              background: "var(--card-bg)", color: "#fff",
-              border: "1.5px solid rgba(0,245,255,0.2)", outline: "none",
-              fontFamily: "var(--font-ibm-plex-mono)", fontSize: "14px",
-              transition: "all 0.2s",
-            }}
-            onFocus={(e) => {
-              e.currentTarget.style.borderColor = "var(--electric-cyan)";
-              e.currentTarget.style.boxShadow = "0 0 12px rgba(0,245,255,0.15)";
-            }}
-            onBlur={(e) => {
-              e.currentTarget.style.borderColor = "rgba(0,245,255,0.2)";
-              e.currentTarget.style.boxShadow = "none";
-            }}
-          />
+          <div style={{ position: "relative" }}>
+            <input
+              type="text"
+              inputMode="decimal"
+              value={betAmount}
+              onChange={(e) => {
+                const v = e.target.value;
+                if (v === "" || /^\d*\.?\d*$/.test(v)) setBetAmount(v);
+              }}
+              style={{
+                width: "100%", padding: "12px 50px 12px 16px", borderRadius: "12px",
+                background: "var(--card-bg)", color: "#fff",
+                border: "1.5px solid rgba(0,245,255,0.2)", outline: "none",
+                fontFamily: "var(--font-ibm-plex-mono)", fontSize: "14px",
+                transition: "all 0.2s", boxSizing: "border-box",
+              }}
+              onFocus={(e) => {
+                e.currentTarget.style.borderColor = "var(--electric-cyan)";
+                e.currentTarget.style.boxShadow = "0 0 12px rgba(0,245,255,0.15)";
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.borderColor = "rgba(0,245,255,0.2)";
+                e.currentTarget.style.boxShadow = "none";
+              }}
+            />
+            <div style={{
+              position: "absolute", right: "2px", top: "2px", bottom: "2px",
+              display: "flex", flexDirection: "column", width: "36px",
+            }}>
+              <button
+                type="button"
+                onClick={() => {
+                  const val = parseFloat(betAmount || "0") + 0.001;
+                  setBetAmount(parseFloat(val.toFixed(4)).toString());
+                }}
+                style={{
+                  flex: 1, borderRadius: "0 10px 0 0",
+                  border: "none", borderLeft: "1px solid rgba(0,245,255,0.2)",
+                  borderBottom: "1px solid rgba(0,245,255,0.2)",
+                  background: "var(--card-bg)", color: "var(--electric-cyan)",
+                  fontSize: "14px", fontWeight: 700, cursor: "pointer",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(0,245,255,0.12)"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = "var(--card-bg)"; }}
+              >▲</button>
+              <button
+                type="button"
+                onClick={() => {
+                  const val = Math.max(0.001, parseFloat(betAmount || "0") - 0.001);
+                  setBetAmount(parseFloat(val.toFixed(4)).toString());
+                }}
+                style={{
+                  flex: 1, borderRadius: "0 0 10px 0",
+                  border: "none", borderLeft: "1px solid rgba(0,245,255,0.2)",
+                  background: "var(--card-bg)", color: "var(--electric-cyan)",
+                  fontSize: "14px", fontWeight: 700, cursor: "pointer",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(0,245,255,0.12)"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = "var(--card-bg)"; }}
+              >▼</button>
+            </div>
+          </div>
         </div>
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
@@ -290,48 +331,7 @@ export default function MarketDetailPage() {
       <div className="mobile-only" style={{ paddingBottom: "80px" }}>
 
         {/* ── Sticky Mobile Navbar ── */}
-        <nav style={{
-          position: "sticky", top: 0, zIndex: 100,
-          background: "rgba(26,26,46,0.95)",
-          backdropFilter: "blur(20px)",
-          borderBottom: "1px solid rgba(0,245,255,0.2)",
-          padding: "16px 20px",
-        }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <Link href="/" style={{ display: "flex", alignItems: "center", gap: "10px", textDecoration: "none" }}>
-              <Image src="/logo.png" alt="AgentBet Logo" width={32} height={32} style={{ objectFit: "contain" }} />
-              <span style={{
-                fontFamily: "var(--font-rajdhani)", fontSize: "24px", fontWeight: 700,
-                background: "linear-gradient(135deg, var(--electric-cyan), var(--neon-pink))",
-                WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text",
-                letterSpacing: "1px",
-              }}>AGENTBET</span>
-            </Link>
-            <ConnectButton.Custom>
-              {({ account, chain, openAccountModal, openConnectModal, mounted }) => {
-                const connected = mounted && account && chain;
-                if (!connected) return (
-                  <button onClick={openConnectModal} style={{
-                    background: "linear-gradient(135deg, var(--electric-cyan), var(--neon-pink))",
-                    border: "none", padding: "10px 20px", borderRadius: "10px",
-                    color: "var(--deep-space)", fontFamily: "var(--font-rajdhani)", fontWeight: 700,
-                    fontSize: "14px", cursor: "pointer", boxShadow: "0 0 20px rgba(0,245,255,0.5)",
-                    whiteSpace: "nowrap",
-                  }}>Connect Wallet</button>
-                );
-                return (
-                  <button onClick={openAccountModal} style={{
-                    background: "linear-gradient(135deg, var(--electric-cyan), var(--neon-pink))",
-                    border: "none", padding: "10px 20px", borderRadius: "10px",
-                    color: "var(--deep-space)", fontFamily: "var(--font-rajdhani)", fontWeight: 700,
-                    fontSize: "14px", cursor: "pointer", boxShadow: "0 0 20px rgba(0,245,255,0.5)",
-                    whiteSpace: "nowrap",
-                  }}>{account.displayName}</button>
-                );
-              }}
-            </ConnectButton.Custom>
-          </div>
-        </nav>
+        <MobileHeader />
 
         {/* ── Back Link ── */}
         <div style={{ padding: "16px 20px 0" }}>

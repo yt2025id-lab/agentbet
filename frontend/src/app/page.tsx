@@ -4,7 +4,7 @@ import { useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useReadContract, useReadContracts } from "wagmi";
-import { ConnectButton } from "@rainbow-me/rainbowkit";
+import { MobileHeader } from "@/components/MobileHeader";
 import { formatEther } from "viem";
 import {
   CONTRACTS,
@@ -180,48 +180,7 @@ export default function Dashboard() {
       <div className="mobile-only" style={{ paddingBottom: "80px" }}>
 
         {/* ── Sticky Mobile Header ── */}
-        <header style={{
-          position: "sticky", top: 0, zIndex: 100,
-          background: "rgba(26,26,46,0.97)",
-          backdropFilter: "blur(20px)",
-          borderBottom: "1px solid rgba(0,245,255,0.2)",
-          padding: "14px 20px",
-        }}>
-          {/* Logo row + connect button */}
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
-            <Link href="/" style={{ display: "flex", alignItems: "center", gap: "8px", textDecoration: "none" }}>
-              <Image src="/logo.png" alt="AgentBet Logo" width={28} height={28} style={{ objectFit: "contain" }} />
-              <span style={{
-                fontFamily: "var(--font-rajdhani)", fontSize: "20px", fontWeight: 700,
-                background: "linear-gradient(135deg, var(--electric-cyan), var(--neon-pink))",
-                WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text",
-                letterSpacing: "2px",
-              }}>AGENTBET</span>
-            </Link>
-            <ConnectButton.Custom>
-              {({ account, chain, openAccountModal, openConnectModal, mounted }) => {
-                const connected = mounted && account && chain;
-                if (!connected) return (
-                  <button onClick={openConnectModal} style={{
-                    background: "linear-gradient(135deg, var(--electric-cyan), var(--neon-pink))",
-                    border: "none", padding: "8px 16px", borderRadius: "8px",
-                    color: "var(--deep-space)", fontFamily: "var(--font-rajdhani)", fontWeight: 700,
-                    fontSize: "12px", cursor: "pointer", boxShadow: "0 0 15px rgba(0,245,255,0.4)",
-                    letterSpacing: "0.5px",
-                  }}>Connect</button>
-                );
-                return (
-                  <button onClick={openAccountModal} style={{
-                    background: "linear-gradient(135deg, var(--electric-cyan), var(--neon-pink))",
-                    border: "none", padding: "8px 14px", borderRadius: "8px",
-                    color: "var(--deep-space)", fontFamily: "var(--font-rajdhani)", fontWeight: 700,
-                    fontSize: "12px", cursor: "pointer", boxShadow: "0 0 15px rgba(0,245,255,0.4)",
-                    letterSpacing: "0.5px",
-                  }}>{account.displayName}</button>
-                );
-              }}
-            </ConnectButton.Custom>
-          </div>
+        <MobileHeader>
           {/* Stats row */}
           <div style={{ display: "flex", gap: "16px", fontSize: "11px", color: "var(--text-muted)", fontFamily: "var(--font-ibm-plex-mono)" }}>
             <span style={{ display: "flex", alignItems: "center", gap: "5px" }}>
@@ -230,7 +189,7 @@ export default function Dashboard() {
             </span>
             <span>{totalAgents} Agents</span>
           </div>
-        </header>
+        </MobileHeader>
 
         {/* ── Main Scrollable Content ── */}
         <div style={{ padding: "20px" }}>
