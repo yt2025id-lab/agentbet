@@ -3,7 +3,7 @@
   "schedule": "0 0 */6 * * *",
   "evms": [
     {
-      "marketAddress": "0xB635CBEb6C1aB83adF72ff6bEc5f8423c7E2ced4",
+      "marketAddress": "0x07d85a17c65b2c5ef702bfD61bc501bb2537f287",
       "chainSelectorName": "ethereum-testnet-sepolia-base-1",
       "gasLimit": "1000000"
     }

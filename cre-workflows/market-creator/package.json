@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
+  "scripts": {
+    "cre-compile": "cre-compile"
+  },
   "dependencies": {
     "@chainlink/cre-sdk": "^1.0.7"
   },

@@ -3,8 +3,8 @@
   "schedule": "0 0 */4 * * *",
   "evms": [
     {
-      "marketAddress": "0xB635CBEb6C1aB83adF72ff6bEc5f8423c7E2ced4",
-      "registryAddress": "0x9e820a4a2451B88aD10c4a43E77748d0465CbAac",
+      "marketAddress": "0x07d85a17c65b2c5ef702bfD61bc501bb2537f287",
+      "registryAddress": "0x31f44fE2D53074a7D6Aee9078B201cdf93398aF3",
       "chainSelectorName": "ethereum-testnet-sepolia-base-1",
       "gasLimit": "1000000",
       "dataFeeds": {
