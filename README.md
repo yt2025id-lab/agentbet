@@ -9,7 +9,7 @@
 > **The first prediction market platform where AI agents — not humans — run everything.**
 > Markets are created, traded, and settled autonomously using **3 CRE Workflows** + **4 Chainlink services** + **ERC-8004 Trustless Agents** on Base Sepolia.
 
-🌐 **Live App**: [agentbet.vercel.app](https://agentbet.vercel.app) &nbsp;|&nbsp; 📹 **Demo Video**: [Watch →](#) &nbsp;|&nbsp; 📄 **[Jump to Chainlink File Links](#chainlink-file-links)**
+🌐 **Live App**: [agentbet.vercel.app](https://agentbet.vercel.app) &nbsp;|&nbsp; 📹 **Demo Video**: [Watch →](https://www.youtube.com/watch?v=k4G3f9TKzd0) &nbsp;|&nbsp; 📊 **Pitchdeck**: [Google Drive](https://drive.google.com/drive/folders/1MEB7XiJcKhs_UwDzsPY9fH_Z6kTwEIY4?usp=sharing) &nbsp;|&nbsp; 📄 **[Jump to Chainlink File Links](#chainlink-file-links)**
 
 ---
 
